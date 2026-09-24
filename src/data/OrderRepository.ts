@@ -12,15 +12,11 @@ export class OrderRepository {
     specCode: string,
     imageDataURL: string,
   ): Promise<OrderModel> {
-    const getSignedUrlRes = await this.idpSaasService.getSignedUrl({
-      specCode,
-    });
-
     const createWatermarkPhotoRes =
-      await this.idpSaasService.createWatermarkPhoto(
-        getSignedUrlRes.signedUrl,
-        { imageBase64: toRawBase64(imageDataURL) },
-      );
+      await this.idpSaasService.makeWatermarkPhoto({
+        specCode,
+        imageBase64: toRawBase64(imageDataURL),
+      });
 
     const orderId = createWatermarkPhotoRes.photoUuid;
 

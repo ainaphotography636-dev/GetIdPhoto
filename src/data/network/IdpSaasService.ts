@@ -94,6 +94,43 @@ export class IdpSaasService {
     });
   }
 
+  /** Creates a watermarked ID photo through our server, never the third-party host. */
+  async makeWatermarkPhoto(payload: {
+    specCode: string;
+    imageBase64: string;
+  }): Promise<CreateWatermarkPhotoResult> {
+    const response = await fetch("/api/id-photo", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        action: "makeWatermark",
+        specCode: payload.specCode,
+        imageBase64: payload.imageBase64,
+      }),
+    });
+
+    const text = await response.text();
+    let data: CreateWatermarkPhotoResult & { error?: string };
+    try {
+      data = JSON.parse(text) as CreateWatermarkPhotoResult & { error?: string };
+    } catch {
+      throw new Error(
+        `HTTP error! status: ${response.status} ${text.trim().slice(0, 500)}`,
+      );
+    }
+
+    if (!response.ok) {
+      const detail = (data.error || text).trim().slice(0, 500);
+      throw new Error(
+        detail
+          ? `HTTP error! status: ${response.status} ${detail}`
+          : `HTTP error! status: ${response.status}`,
+      );
+    }
+
+    return data;
+  }
+
   async getPhotos(orderId: string): Promise<GetPhotosResult> {
     return this.http.get(`/api/photo/${orderId}`);
   }
