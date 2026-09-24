@@ -88,8 +88,10 @@ export class IdpSaasService {
     signedUrl: string,
     payload: CreateWatermarkPhotoPayload,
   ): Promise<CreateWatermarkPhotoResult> {
-    const http = new HttpService(signedUrl.replace("http:", "https:"));
-    return http.post("", payload);
+    return this.http.post("/api/photo/create-watermark", {
+      signedUrl,
+      imageBase64: payload.imageBase64,
+    });
   }
 
   async getPhotos(orderId: string): Promise<GetPhotosResult> {

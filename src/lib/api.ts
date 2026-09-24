@@ -27,16 +27,42 @@ export const forwardRequest = async (
   };
 
   if (body) {
-    options.body = JSON.stringify({
-      ...body,
-      apiKey: process.env.IDPHOTO_API_KEY,
-      apiSecret: process.env.IDPHOTO_API_SECRET,
-    });
+    options.body = JSON.stringify(withIdphotoCredentials(body));
   }
 
   const response = await fetch(url, options);
   return response;
 };
+
+function withIdphotoCredentials(body: Record<string, unknown>) {
+  return {
+    ...body,
+    apiKey: process.env.IDPHOTO_API_KEY,
+    apiSecret: process.env.IDPHOTO_API_SECRET,
+  };
+}
+
+/** Posts JSON to a signed idphoto URL, including the server-side API credentials. */
+export async function postIdphotoUrl(
+  url: string,
+  body: Record<string, unknown>,
+): Promise<Response> {
+  const endpoint = new URL(IDPHOTO_API_ENDPOINT);
+  const target = new URL(url.replace("http:", "https:"));
+  if (target.origin !== endpoint.origin) {
+    throw new Error(
+      `Refusing to post photo payload to unexpected host: ${target.origin}`,
+    );
+  }
+
+  return fetch(target.toString(), {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(withIdphotoCredentials(body)),
+  });
+}
 
 type ErrorHandler = (params: { status: number; responseText: string }) => {
   status?: number;
