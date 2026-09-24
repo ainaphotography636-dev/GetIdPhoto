@@ -104,7 +104,24 @@ function SuccessContent() {
                 {formattedAmount ? ` Charged ${formattedAmount}.` : ""}
               </p>
 
-              {result.downloadUrl ? (
+              {sessionId && result.photoUuid ? (
+                <div className="flex flex-col gap-3 mb-4">
+                  <a
+                    href={`/api/photo/print-pack?session_id=${encodeURIComponent(sessionId)}&kind=single`}
+                    className="inline-flex items-center justify-center gap-2 w-full bg-emerald-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-emerald-700 transition-colors"
+                  >
+                    <Download className="h-5 w-5" />
+                    Download single photo (600 DPI)
+                  </a>
+                  <a
+                    href={`/api/photo/print-pack?session_id=${encodeURIComponent(sessionId)}&kind=sheet`}
+                    className="inline-flex items-center justify-center gap-2 w-full border-2 border-emerald-700 text-emerald-800 px-6 py-3 rounded-lg font-semibold hover:bg-emerald-50 transition-colors"
+                  >
+                    <Download className="h-5 w-5" />
+                    Download 4×6 postcard (four photos, 600 DPI)
+                  </a>
+                </div>
+              ) : result.downloadUrl ? (
                 <a
                   href={result.downloadUrl}
                   target="_blank"

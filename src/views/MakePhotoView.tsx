@@ -1044,12 +1044,10 @@ function MakePhotoView() {
               &copy; 2024 {constants.studioName}. All rights reserved.
             </p>
             <a
-              href="https://idphoto.ai"
-              target="_blank"
-              rel="noopener noreferrer"
+              href="https://getidphoto.ae"
               className="text-gray-400 hover:text-white transition-colors text-sm"
             >
-              Power by IdPhoto.AI - Passport Photo API provider.
+              Power by getidphoto.ae
             </a>
           </div>
         </div>
