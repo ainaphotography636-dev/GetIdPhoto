@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-function readEnv(name: string): string {
+export function readEnv(name: string): string {
   // Bracket access so Next.js does not inline the value at build time.
   // On Vercel, inlined process.env.IDPHOTO_API_KEY is undefined in preview
   // even when the variable is set for the deployment runtime.

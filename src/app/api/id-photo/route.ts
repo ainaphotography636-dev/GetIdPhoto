@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { forwardRequest, handleForwardRequest } from "@/lib/api";
+import { forwardRequest, handleForwardRequest, readEnv } from "@/lib/api";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -44,10 +44,9 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     );
   }
 
-  // Bracket access reads the key at request time. Dot access is inlined at
-  // build and is empty on Vercel, which makes idphoto.ai return 403.
-  const apiKey = process.env["IDPHOTO_API_KEY"];
-  if (!apiKey?.trim()) {
+  const apiKey = readEnv("IDPHOTO_API_KEY");
+  const apiSecret = readEnv("IDPHOTO_API_SECRET");
+  if (!apiKey || !apiSecret) {
     console.error("[id-photo] IDPHOTO_API_KEY is empty at request time.");
     return NextResponse.json(
       { error: "ID photo service is not configured" },
