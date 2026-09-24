@@ -23,11 +23,7 @@ import {
   LoaderCircle,
 } from "lucide-react";
 import { useSearchParams } from "next/navigation";
-import {
-  loadStripe,
-  type Stripe,
-  type StripeElements,
-} from "@stripe/stripe-js";
+import { startStripeCheckout } from "../lib/startStripeCheckout";
 import {
   allPhotoSpecs,
   copyPhotoSpec,
@@ -45,10 +41,8 @@ import { orderRepository } from "../data/OrderRepository";
 import BusinessLocationCard from "../components/BusinessLocationCard";
 import type { ProductPackage } from "../models/ProductPackage";
 import { getIssueMessage } from "../utils/getIssueMessage";
-import { idpSaasService } from "../data/network/IdpSaasService";
 import type { OrderModel } from "../models/OrderModel";
 import NavItem from "../lib/nav-item";
-import { computeTotalAndPhotoNumber } from "@/utils/computeTotalAndPhotoNumber";
 import ProductPackageCell from "@/components/ProductPackageCell";
 import goodSampleImage from "@/assets/good3.png";
 
@@ -91,8 +85,6 @@ function MakePhotoView() {
     defaultProductPackage,
   );
   const [currentOrder, setCurrentOrder] = useState<OrderModel | null>(null);
-  const stripeElements = useRef<StripeElements | null>(null);
-  const stripe = useRef<Stripe | null>(null);
   const [isConfirmingPayment, setIsConfirmingPayment] = useState(false);
   const [paymentMessage, setPaymentMessage] = useState("");
   const [additionalPrintedPhotoNumber, setAdditionalPrintedPhotoNumber] =
@@ -236,12 +228,6 @@ function MakePhotoView() {
       setShowOriginal(false);
 
       setCurrentOrder(order);
-
-      await updateStripeForm(
-        selectedPackage,
-        additionalPrintedPhotoNumber,
-        order.orderId,
-      );
     } catch (err) {
       console.error("API Error:", err);
       setError(describePhotoUploadError(err));
@@ -288,78 +274,9 @@ function MakePhotoView() {
     setShowSearchResults(false);
   };
 
-  const initStripeForm = async (
-    stripe: Stripe,
-    amount: number,
-    currency: string,
-    photoUuid: string,
-    printedPhotoNumber: number,
-  ) => {
-    try {
-      // Get clientSecret
-      const { clientSecret } = await idpSaasService.createPaymentIntent({
-        amountInCent: amount,
-        currency,
-        photoUuid,
-        printedPhotoNumber,
-      });
-
-      // Build Stripe form
-      stripeElements.current = stripe.elements({
-        appearance: { theme: "stripe" },
-        clientSecret,
-      });
-
-      if (stripeElements.current === null) {
-        throw new Error("stripeElements is null");
-      }
-
-      const paymentElement = stripeElements.current.create("payment", {
-        layout: "tabs",
-      });
-      paymentElement.mount("#payment-element");
-    } catch (error) {
-      console.error(error);
-    }
-  };
-
-  const updateStripeForm = async (
-    pkg: ProductPackage,
-    additionalPhotoNumber: number,
-    orderId: string | undefined = currentOrder?.orderId,
-  ) => {
-    if (!orderId) {
-      console.log("orderId is empty, return");
-      return;
-    }
-
-    if (!stripe.current) {
-      console.log("stripe instance is empty, return");
-      return;
-    }
-
-    try {
-      const { stripeAmount, photoNumber } = computeTotalAndPhotoNumber(
-        pkg,
-        additionalPhotoNumber,
-      );
-
-      await initStripeForm(
-        stripe.current,
-        stripeAmount,
-        pkg.currency,
-        orderId,
-        photoNumber,
-      );
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
-  const handleCheckoutBtnClick = async (pkg: ProductPackage) => {
+  const handleCheckoutBtnClick = (pkg: ProductPackage) => {
     setSelectedPackage(pkg);
-
-    await updateStripeForm(pkg, additionalPrintedPhotoNumber);
+    setPaymentMessage("");
   };
 
   const handleAdditionalPhotoNumberUpdate = async (newVal: number) => {
@@ -369,8 +286,6 @@ function MakePhotoView() {
     }
 
     setAdditionalPrintedPhotoNumber(newVal);
-
-    await updateStripeForm(selectedPackage, newVal);
   };
 
   const handleStripeFormSubmit: FormEventHandler<HTMLFormElement> = async (
@@ -379,41 +294,18 @@ function MakePhotoView() {
     e.preventDefault();
 
     try {
-      if (!stripe.current || !stripeElements.current) {
-        throw new Error("stripe instance or stripeElements is null");
-      }
-
       if (!currentOrder) {
-        throw new Error("currentOrder is empty");
+        throw new Error("Create a photo before paying.");
       }
 
-      setIsConfirmingPayment(() => true);
+      setIsConfirmingPayment(true);
+      setPaymentMessage("");
 
-      const returnUrl = `${window.location.origin}/orders/${currentOrder.orderId}`;
-      const { error } = await stripe.current.confirmPayment({
-        elements: stripeElements.current,
-        confirmParams: {
-          // Make sure to change this to your payment completion page
-          return_url: returnUrl,
-        },
+      await startStripeCheckout({
+        packageId: selectedPackage.id,
+        photoUuid: currentOrder.orderId,
+        specCode: selectedSpec.specCode,
       });
-
-      // This point will only be reached if there is an immediate error when
-      // confirming the payment. Otherwise, your customer will be redirected to
-      // your `return_url`. For some payment methods like iDEAL, your customer will
-      // be redirected to an intermediate site first to authorize the payment, then
-      // redirected to the `return_url`.
-      if (error.type === "card_error" || error.type === "validation_error") {
-        setPaymentMessage(() => error.message ?? "Card validation failed.");
-      } else {
-        setPaymentMessage(
-          () =>
-            error.message ||
-            `Payment error (${error.type || "unknown"}). Check the console for details.`,
-        );
-      }
-
-      setIsConfirmingPayment(() => false);
     } catch (error) {
       console.error("[make-photo] Payment submit failed", error);
       setPaymentMessage(
@@ -458,22 +350,6 @@ function MakePhotoView() {
       setSelectedPackage(matched);
     }
   }, [searchParams]);
-
-  useEffect(() => {
-    const initStripe = async () => {
-      try {
-        stripe.current = await loadStripe(constants.stripePublicKey);
-        if (stripe.current === null) {
-          throw new Error("Create Stripe instance failed");
-        }
-      } catch (error) {
-        console.error(error);
-        return;
-      }
-    };
-
-    initStripe();
-  }, []);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -1111,7 +987,6 @@ function MakePhotoView() {
               className="pb-4"
               onSubmit={handleStripeFormSubmit}
             >
-              <div id="payment-element"></div>
               <div className="pt-4">
                 <button
                   id="submit"
