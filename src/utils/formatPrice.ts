@@ -3,7 +3,7 @@ export function formatPrice(
   currency: string,
   locale: string = "en-US",
 ): string {
-  const amount = amountCents / 100;
+  const amount = Number.isFinite(amountCents) ? amountCents / 100 : 0;
   const normalizedCurrency = currency.toUpperCase();
   const resolvedLocale =
     normalizedCurrency === "AED" ? "en-AE" : locale;

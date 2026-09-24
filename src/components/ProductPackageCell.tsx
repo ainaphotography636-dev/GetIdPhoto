@@ -31,7 +31,7 @@ export default function ProductPackageCell(props: Props): JSX.Element {
 
   const descriptions = [
     ...pkg.description,
-    pkg.printedPhotoNumber === 0
+    !Number.isFinite(pkg.printedPhotoNumber) || pkg.printedPhotoNumber <= 0
       ? undefined
       : `${photoNumber} printed photos(pick up)`,
   ].filter((it) => it !== undefined);
@@ -94,7 +94,8 @@ export default function ProductPackageCell(props: Props): JSX.Element {
           {pkg.notice}
         </p>
       ) : null}
-      {pkg.printedPhotoNumber === 0 ? (
+      {!Number.isFinite(pkg.printedPhotoNumber) ||
+      pkg.printedPhotoNumber <= 0 ? (
         <></>
       ) : (
         <div className="flex items-center gap-2">

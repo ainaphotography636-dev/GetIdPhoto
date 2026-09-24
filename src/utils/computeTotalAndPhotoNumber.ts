@@ -12,18 +12,21 @@ export function computeTotalAndPhotoNumber(
   pkg: ProductPackage,
   additionalPhotoNumber: number,
 ): ComputeResult {
+  const includedPrints = Number.isFinite(pkg.printedPhotoNumber)
+    ? pkg.printedPhotoNumber
+    : 0;
+  const extraPrintPrice = Number.isFinite(constants.perAdditionalPhotoPriceInCent)
+    ? constants.perAdditionalPhotoPriceInCent
+    : 0;
   const totalAmount =
-    pkg.printedPhotoNumber === 0
+    includedPrints <= 0
       ? pkg.priceCents
-      : pkg.priceCents +
-        additionalPhotoNumber * constants.perAdditionalPhotoPriceInCent;
+      : pkg.priceCents + additionalPhotoNumber * extraPrintPrice;
 
   const stripeAmount = amountInCentToStripeAmount(totalAmount, pkg.currency);
 
   const photoNumber =
-    pkg.printedPhotoNumber === 0
-      ? 0
-      : pkg.printedPhotoNumber + additionalPhotoNumber;
+    includedPrints <= 0 ? 0 : includedPrints + additionalPhotoNumber;
 
   return {
     totalAmount,
