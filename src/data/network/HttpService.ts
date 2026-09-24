@@ -63,7 +63,25 @@ export class HttpService {
       const response = await fetch(url, config);
 
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        const responseText = await response.text().catch(() => "");
+        let loggedUrl = url;
+        try {
+          const parsed = new URL(url);
+          loggedUrl = `${parsed.origin}${parsed.pathname}`;
+        } catch {
+          // Keep the original URL when it is not absolute.
+        }
+        console.error("[HttpService] request failed", {
+          url: loggedUrl,
+          status: response.status,
+          body: responseText.slice(0, 2000),
+        });
+        const detail = responseText.trim().slice(0, 500);
+        throw new Error(
+          detail
+            ? `HTTP error! status: ${response.status} ${detail}`
+            : `HTTP error! status: ${response.status}`,
+        );
       }
 
       return response;

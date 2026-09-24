@@ -217,9 +217,12 @@ export function describePhotoUploadError(err: unknown): string {
       return "The photo service took too long to respond. Please wait a moment and try again.";
     }
 
-    const statusMatch = err.message.match(/status:\s*(\d+)/i);
+    const statusMatch = err.message.match(/status:\s*(\d+)\s*([\s\S]*)/i);
     if (statusMatch) {
-      return `We couldn't create your passport photo right now (error ${statusMatch[1]}). Please try again.`;
+      const detail = statusMatch[2]?.trim();
+      return detail
+        ? `We couldn't create your passport photo right now (error ${statusMatch[1]}): ${detail}`
+        : `We couldn't create your passport photo right now (error ${statusMatch[1]}). Please try again.`;
     }
 
     if (/failed to fetch|networkerror|load failed/i.test(err.message)) {

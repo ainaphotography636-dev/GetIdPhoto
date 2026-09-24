@@ -19,7 +19,7 @@ export class OrderRepository {
     const createWatermarkPhotoRes =
       await this.idpSaasService.createWatermarkPhoto(
         getSignedUrlRes.signedUrl,
-        { imageBase64: imageDataURL },
+        { imageBase64: toRawBase64(imageDataURL) },
       );
 
     const orderId = createWatermarkPhotoRes.photoUuid;
@@ -57,6 +57,16 @@ export class OrderRepository {
 
     return order;
   }
+}
+
+/** idphoto.app expects raw base64, not a data: URL. */
+function toRawBase64(imageDataURL: string): string {
+  const value = imageDataURL.trim();
+  const comma = value.indexOf(",");
+  if (value.startsWith("data:") && comma !== -1) {
+    return value.slice(comma + 1);
+  }
+  return value;
 }
 
 // Shared instance
