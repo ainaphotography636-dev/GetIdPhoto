@@ -37,7 +37,10 @@ import {
 import { constants } from "../constants";
 import { formatPrice } from "../utils/formatPrice";
 import { compressImageFile } from "../utils/compressImage";
-import { ensureJpegFile, HEIC_UPLOAD_HELP_MESSAGE } from "../utils/convertHeicToJpeg";
+import {
+  describePhotoUploadError,
+  ensureJpegFile,
+} from "../utils/convertHeicToJpeg";
 import { orderRepository } from "../data/OrderRepository";
 import BusinessLocationCard from "../components/BusinessLocationCard";
 import type { ProductPackage } from "../models/ProductPackage";
@@ -135,7 +138,7 @@ function MakePhotoView() {
       await processPhoto(jpegFile);
     } catch (err) {
       console.error("Photo upload error:", err);
-      setError(HEIC_UPLOAD_HELP_MESSAGE);
+      setError(describePhotoUploadError(err));
       setIsProcessing(false);
     } finally {
       // Allow re-selecting the same file if conversion/fallback failed mid-flow
@@ -241,7 +244,7 @@ function MakePhotoView() {
       );
     } catch (err) {
       console.error("API Error:", err);
-      setError(HEIC_UPLOAD_HELP_MESSAGE);
+      setError(describePhotoUploadError(err));
     } finally {
       setIsProcessing(false);
     }
@@ -905,7 +908,7 @@ function MakePhotoView() {
                       <input
                         ref={fileInputRef}
                         type="file"
-                        accept="image/png,image/jpeg,image/jpg,image/heic,image/heif,.heic,.heif"
+                        accept="image/png,image/jpeg,image/jpg,image/webp,image/heic,image/heif,.heic,.heif,.webp"
                         onChange={handleFileSelect}
                         className="hidden"
                       />
@@ -984,7 +987,7 @@ function MakePhotoView() {
                 <input
                   ref={fileInputRef}
                   type="file"
-                  accept="image/png,image/jpeg,image/jpg,image/heic,image/heif,.heic,.heif"
+                  accept="image/png,image/jpeg,image/jpg,image/webp,image/heic,image/heif,.heic,.heif,.webp"
                   onChange={handleFileSelect}
                   className="hidden"
                 />
