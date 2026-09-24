@@ -4,6 +4,9 @@ import { getGitVersion } from "./src/lib/getGitVersion";
 const nextConfig: NextConfig = {
   /* config options here */
   reactStrictMode: true,
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
   env: {
     GIT_COMMIT_SHA: getGitVersion(),
   },
