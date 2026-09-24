@@ -217,6 +217,9 @@ function HomeView() {
                   Rated 4.9/5 by 2,500+ customers
                 </span>
               </div>
+              <p className="text-lg font-semibold tracking-wide text-emerald-200 mb-3">
+                {constants.studioName || "GetIDPhotoAI"}
+              </p>
               <h1 className="font-display text-4xl md:text-5xl lg:text-[3.25rem] font-bold leading-[1.15] tracking-tight text-white mb-6">
                 UAE Passport, Visa &amp; Emirates ID
                 <span className="block text-white">Photo Maker</span>

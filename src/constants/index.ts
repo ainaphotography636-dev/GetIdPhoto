@@ -4,7 +4,7 @@ import type { ProductPackage } from "../models/ProductPackage";
 
 export const constants = {
   stripePublicKey: `${process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY}`,
-  studioName: `${process.env.NEXT_PUBLIC_STUDIO_NAME}`,
+  studioName: process.env.NEXT_PUBLIC_STUDIO_NAME || "GetIDPhotoAI",
   studioDescription: `${process.env.NEXT_PUBLIC_STUDIO_DESCRIPTION}`,
   defaultSpecCodes: [
     "uae-passport",
