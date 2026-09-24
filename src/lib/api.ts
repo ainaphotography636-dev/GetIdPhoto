@@ -1,24 +1,27 @@
 import { NextResponse } from "next/server";
 
-function getIdphotoApiEndpoint(): string {
-  const endpoint = process.env.IDPHOTO_API_ENDPOINT;
-  // Check if the endpoint is defined and starts with http:// or https://
-  if (endpoint?.startsWith("http://") || endpoint?.startsWith("https://")) {
-    return endpoint;
-  }
-  // Default to the US endpoint if no valid endpoint is provided
-  return "https://api-us.idphotoapp.com";
+function readEnv(name: string): string {
+  // Bracket access so Next.js does not inline the value at build time.
+  // On Vercel, inlined process.env.IDPHOTO_API_KEY is undefined in preview
+  // even when the variable is set for the deployment runtime.
+  const value = process.env[name];
+  return typeof value === "string" ? value.replace(/\0/g, "").trim() : "";
 }
 
-const IDPHOTO_API_ENDPOINT = getIdphotoApiEndpoint();
-console.log(`Current idphoto api endpoint: ${IDPHOTO_API_ENDPOINT}`);
+function getIdphotoApiEndpoint(): string {
+  const endpoint = readEnv("IDPHOTO_API_ENDPOINT");
+  if (endpoint.startsWith("http://") || endpoint.startsWith("https://")) {
+    return endpoint;
+  }
+  return "https://api-us.idphotoapp.com";
+}
 
 export const forwardRequest = async (
   method: string,
   path: string,
   body?: any,
 ) => {
-  const url = `${IDPHOTO_API_ENDPOINT}${path}`;
+  const url = `${getIdphotoApiEndpoint()}${path}`;
   const options: RequestInit = {
     method,
     headers: {
@@ -35,10 +38,20 @@ export const forwardRequest = async (
 };
 
 function withIdphotoCredentials(body: Record<string, unknown>) {
+  const apiKey = readEnv("IDPHOTO_API_KEY");
+  const apiSecret = readEnv("IDPHOTO_API_SECRET");
+
+  if (!apiKey || !apiSecret) {
+    console.error(
+      "[idphoto] IDPHOTO_API_KEY or IDPHOTO_API_SECRET is empty at request time.",
+      { hasKey: Boolean(apiKey), hasSecret: Boolean(apiSecret) },
+    );
+  }
+
   return {
     ...body,
-    apiKey: process.env.IDPHOTO_API_KEY,
-    apiSecret: process.env.IDPHOTO_API_SECRET,
+    apiKey,
+    apiSecret,
   };
 }
 
@@ -47,7 +60,7 @@ export async function postIdphotoUrl(
   url: string,
   body: Record<string, unknown>,
 ): Promise<Response> {
-  const endpoint = new URL(IDPHOTO_API_ENDPOINT);
+  const endpoint = new URL(getIdphotoApiEndpoint());
   const target = new URL(url.replace("http:", "https:"));
   if (target.origin !== endpoint.origin) {
     throw new Error(
