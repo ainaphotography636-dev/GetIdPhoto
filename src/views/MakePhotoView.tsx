@@ -37,7 +37,7 @@ import {
   describePhotoUploadError,
   ensureJpegFile,
 } from "../utils/convertHeicToJpeg";
-import { orderRepository } from "../data/OrderRepository";
+import { processPhoto as createCutoutPhoto } from "@/app/actions/processPhoto";
 import BusinessLocationCard from "../components/BusinessLocationCard";
 import type { ProductPackage } from "../models/ProductPackage";
 import { getIssueMessage } from "../utils/getIssueMessage";
@@ -212,16 +212,34 @@ function MakePhotoView() {
       const jpegFile = await ensureJpegFile(file);
       const imageDataURL = await compressImageFile(jpegFile);
 
-      const order = await orderRepository.createOrder(
-        selectedSpec.specCode,
-        imageDataURL,
+      const created = await createCutoutPhoto({
+        imageBase64: imageDataURL,
+        specCode: selectedSpec.specCode,
+      });
+      if (!created.ok) {
+        throw new Error(created.error);
+      }
+
+      const order = {
+        orderId: created.orderId,
+        specCode: selectedSpec.specCode,
+        status: "unpaid" as const,
+        croppedNoBgWatermarkImageUrl: created.idPhotoImage,
+        issues: [],
+      };
+      sessionStorage.setItem(
+        `cutout:${created.orderId}`,
+        JSON.stringify({
+          single: created.idPhotoImage,
+          sheet: created.printLayoutImage,
+        }),
       );
 
       const result: ApiResponse = {
         photoUuid: order.orderId,
-        idPhotoUrl: order.croppedNoBgWatermarkImageUrl ?? "",
-        issues: order.issues,
-        waterMark: true,
+        idPhotoUrl: created.idPhotoImage,
+        issues: [],
+        waterMark: false,
       };
       setProcessedPhoto(result);
       // Reset show original state when new photo is processed

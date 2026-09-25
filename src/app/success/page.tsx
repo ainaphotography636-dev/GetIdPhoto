@@ -63,6 +63,29 @@ function SuccessContent() {
     };
   }, [sessionId]);
 
+  const [savedDownloads, setSavedDownloads] = useState<{
+    single: string;
+    sheet: string;
+  } | null>(null);
+
+  useEffect(() => {
+    if (!result?.photoUuid || typeof window === "undefined") {
+      return;
+    }
+    const raw = sessionStorage.getItem(`cutout:${result.photoUuid}`);
+    if (!raw) {
+      return;
+    }
+    try {
+      const parsed = JSON.parse(raw) as { single?: string; sheet?: string };
+      if (parsed.single && parsed.sheet) {
+        setSavedDownloads({ single: parsed.single, sheet: parsed.sheet });
+      }
+    } catch {
+      setSavedDownloads(null);
+    }
+  }, [result?.photoUuid]);
+
   const formattedAmount =
     result?.amountTotal != null && result.currency
       ? formatPrice(result.amountTotal, result.currency)
@@ -107,14 +130,24 @@ function SuccessContent() {
               {sessionId && result.photoUuid ? (
                 <div className="flex flex-col gap-3 mb-4">
                   <a
-                    href={`/api/photo/print-pack?session_id=${encodeURIComponent(sessionId)}&kind=single`}
+                    href={
+                      savedDownloads?.single ||
+                      `/api/photo/print-pack?session_id=${encodeURIComponent(sessionId)}&kind=single`
+                    }
+                    target={savedDownloads ? "_blank" : undefined}
+                    rel={savedDownloads ? "noopener noreferrer" : undefined}
                     className="inline-flex items-center justify-center gap-2 w-full bg-emerald-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-emerald-700 transition-colors"
                   >
                     <Download className="h-5 w-5" />
                     Download single photo (600 DPI)
                   </a>
                   <a
-                    href={`/api/photo/print-pack?session_id=${encodeURIComponent(sessionId)}&kind=sheet`}
+                    href={
+                      savedDownloads?.sheet ||
+                      `/api/photo/print-pack?session_id=${encodeURIComponent(sessionId)}&kind=sheet`
+                    }
+                    target={savedDownloads ? "_blank" : undefined}
+                    rel={savedDownloads ? "noopener noreferrer" : undefined}
                     className="inline-flex items-center justify-center gap-2 w-full border-2 border-emerald-700 text-emerald-800 px-6 py-3 rounded-lg font-semibold hover:bg-emerald-50 transition-colors"
                   >
                     <Download className="h-5 w-5" />
