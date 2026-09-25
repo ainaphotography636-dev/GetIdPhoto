@@ -22,6 +22,7 @@ import { useRouter } from "next/navigation";
 import { constants } from "../constants";
 import type { SpecCode } from "../models/PhotoSpec";
 import ProductPackageCard from "../components/ProductPackageCard";
+import PhotoGuidelines from "../components/PhotoGuidelines";
 import { useRef, useState, type ReactNode } from "react";
 import NavItem from "../lib/nav-item";
 import { startStripeCheckout } from "../lib/startStripeCheckout";
@@ -391,6 +392,8 @@ function HomeView() {
           </div>
         </div>
       </section>
+
+      <PhotoGuidelines />
 
       {/* Why Choose Us Section */}
       <section className="py-20 bg-white">
