@@ -39,6 +39,7 @@ import {
 } from "../utils/convertHeicToJpeg";
 import { processPhoto as createCutoutPhoto } from "@/app/actions/processPhoto";
 import BusinessLocationCard from "../components/BusinessLocationCard";
+import BrandLogo from "../components/BrandLogo";
 import type { ProductPackage } from "../models/ProductPackage";
 import { getIssueMessage } from "../utils/getIssueMessage";
 import type { OrderModel } from "../models/OrderModel";
@@ -374,16 +375,9 @@ function MakePhotoView() {
       {/* Header */}
       <header className="bg-white shadow-sm border-b">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
+          <div className="flex justify-between items-center h-24">
             <NavItem href="/">
-              <div className="flex items-center space-x-3">
-                <div className="bg-emerald-600 p-2 rounded-lg">
-                  <Camera className="h-6 w-6 text-white" />
-                </div>
-                <span className="text-2xl font-bold text-gray-900">
-                  {constants.studioName}
-                </span>
-              </div>
+              <BrandLogo height={64} />
             </NavItem>
 
             <NavItem

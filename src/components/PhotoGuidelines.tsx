@@ -80,11 +80,11 @@ export default function PhotoGuidelines() {
           </p>
         </div>
 
-        <div className="mx-auto grid max-w-3xl grid-cols-1 gap-4 sm:grid-cols-3">
+        <div className="mx-auto grid max-w-2xl grid-cols-1 gap-3 sm:grid-cols-3">
           {examples.map((example) => (
             <article
               key={example.title}
-              className="overflow-hidden rounded-2xl bg-white shadow-md"
+              className="overflow-hidden rounded-xl bg-white shadow-sm"
             >
               <div className="relative aspect-square bg-stone-200">
                 <img
@@ -93,14 +93,14 @@ export default function PhotoGuidelines() {
                   className="h-full w-full object-cover object-[center_18%]"
                 />
                 <span
-                  className={`absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-full text-white shadow-md ${
+                  className={`absolute right-1.5 top-1.5 flex h-6 w-6 items-center justify-center rounded-full text-white shadow-md ${
                     example.valid ? "bg-emerald-500" : "bg-red-500"
                   }`}
                 >
-                  {example.valid ? <Check className="h-4 w-4" strokeWidth={3} /> : <X className="h-4 w-4" strokeWidth={3} />}
+                  {example.valid ? <Check className="h-3.5 w-3.5" strokeWidth={3} /> : <X className="h-3.5 w-3.5" strokeWidth={3} />}
                 </span>
               </div>
-              <p className="px-3 py-3 text-center text-sm font-medium text-slate-800">
+              <p className="px-2.5 py-2.5 text-center text-sm font-medium text-slate-800">
                 {example.title}
               </p>
             </article>

@@ -2,8 +2,9 @@
 
 import { useEffect, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
-import { Camera, CheckCircle, Download, LoaderCircle } from "lucide-react";
+import { CheckCircle, Download, LoaderCircle } from "lucide-react";
 import NavItem from "@/lib/nav-item";
+import BrandLogo from "@/components/BrandLogo";
 import { constants } from "@/constants";
 import { formatPrice } from "@/utils/formatPrice";
 
@@ -94,14 +95,9 @@ function SuccessContent() {
   return (
     <div className="min-h-screen bg-emerald-50">
       <header className="bg-white border-b border-gray-200">
-        <div className="max-w-3xl mx-auto px-4 h-16 flex items-center">
-          <NavItem href="/" className="flex items-center gap-3">
-            <div className="bg-emerald-600 p-2 rounded-lg">
-              <Camera className="h-5 w-5 text-white" />
-            </div>
-            <span className="text-xl font-bold text-slate-900">
-              {constants.studioName}
-            </span>
+        <div className="max-w-3xl mx-auto px-4 h-24 flex items-center">
+          <NavItem href="/">
+            <BrandLogo height={64} />
           </NavItem>
         </div>
       </header>

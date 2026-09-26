@@ -23,6 +23,7 @@ import { constants } from "../constants";
 import type { SpecCode } from "../models/PhotoSpec";
 import ProductPackageCard from "../components/ProductPackageCard";
 import PhotoGuidelines from "../components/PhotoGuidelines";
+import BrandLogo from "../components/BrandLogo";
 import { useRef, useState, type ReactNode } from "react";
 import NavItem from "../lib/nav-item";
 import { startStripeCheckout } from "../lib/startStripeCheckout";
@@ -160,15 +161,8 @@ function HomeView() {
       {/* Header */}
       <header className="fixed top-0 w-full bg-white/95 backdrop-blur-sm border-b border-gray-200 z-50 shadow-sm">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center space-x-3">
-              <div className="bg-emerald-600 p-2 rounded-lg">
-                <Camera className="h-6 w-6 text-white" />
-              </div>
-              <span className="text-2xl font-bold tracking-tight text-gray-900">
-                {constants.studioName}
-              </span>
-            </div>
+          <div className="flex justify-between items-center h-24">
+            <BrandLogo height={68} />
             <nav className="hidden md:flex space-x-8">
               {navItems.map((it, index) => (
                 <button
@@ -201,7 +195,7 @@ function HomeView() {
       </header>
 
       {/* Hero Section */}
-      <section className="pt-16 bg-gradient-to-br from-emerald-800 via-emerald-900 to-neutral-950 text-white">
+      <section className="pt-24 bg-gradient-to-br from-emerald-800 via-emerald-900 to-neutral-950 text-white">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div>
@@ -460,7 +454,7 @@ function HomeView() {
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-6 max-w-3xl mx-auto">
+          <div className="grid md:grid-cols-2 gap-8 max-w-3xl mx-auto pt-4">
             {constants.productPackages.map((pkg) => (
               <ProductPackageCard
                 key={pkg.id}
@@ -579,13 +573,8 @@ function HomeView() {
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid md:grid-cols-4 gap-8">
             <div className="md:col-span-2">
-              <div className="flex items-center space-x-3 mb-4">
-                <div className="bg-emerald-600 p-2 rounded-lg">
-                  <Camera className="h-6 w-6 text-white" />
-                </div>
-                <span className="text-xl font-bold">
-                  {constants.studioName}
-                </span>
+              <div className="mb-4">
+                <BrandLogo height={64} variant="light" />
               </div>
               <p className="text-gray-400 leading-relaxed mb-4">
                 UAE passport, visa, and Emirates ID photos online — ICP and
