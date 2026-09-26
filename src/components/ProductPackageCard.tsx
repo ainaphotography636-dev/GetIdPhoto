@@ -11,7 +11,7 @@ interface Props {
 }
 
 export default function ProductPackageCard(props: Props): JSX.Element {
-  const { pkg, onBuyClick, isSelected, isLoading } = props;
+  const { pkg, onBuyClick, isLoading } = props;
 
   const formattedPrice = formatPrice(pkg.priceCents, pkg.currency);
 
@@ -23,58 +23,22 @@ export default function ProductPackageCard(props: Props): JSX.Element {
   ].filter((it) => it !== undefined);
 
   return (
-    <div
-      className={`${
-        isSelected ? "bg-emerald-600 text-white" : "bg-white text-slate-900"
-      } rounded-xl shadow-lg p-8 relative flex flex-col justify-between`}
-    >
-      {pkg.isPopular ? (
-        <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 bg-red-600 text-white px-4 py-1 rounded-full text-sm font-bold">
-          RECOMMENDED
-        </div>
-      ) : null}
-
+    <div className="relative flex flex-col justify-between rounded-xl bg-white p-8 text-slate-900 shadow-lg">
       <div className="flex flex-col">
-        <h3
-          className={`text-xl font-semibold mb-4 ${
-            isSelected ? "text-white" : "text-slate-900"
-          }`}
-        >
-          {pkg.name}
-        </h3>
-        <div
-          className={`text-3xl font-bold mb-4 ${
-            isSelected ? "text-white" : "text-slate-900"
-          }`}
-        >
+        <h3 className="mb-4 text-xl font-semibold text-slate-900">{pkg.name}</h3>
+        <div className="mb-4 text-3xl font-bold text-slate-900">
           {formattedPrice}
         </div>
-        <ul className="space-y-3 mb-6">
+        <ul className="mb-6 space-y-3">
           {descriptions.map((it, i) => (
             <li key={`${i}-${it}`} className="flex items-start space-x-2">
-              <CheckCircle
-                className={`h-5 w-5 mt-0.5 flex-shrink-0 ${
-                  isSelected ? "text-white" : "text-emerald-700"
-                }`}
-              />
-              <span
-                className={`leading-snug ${
-                  isSelected ? "text-white" : "text-slate-900"
-                }`}
-              >
-                {it}
-              </span>
+              <CheckCircle className="mt-0.5 h-5 w-5 flex-shrink-0 text-emerald-700" />
+              <span className="leading-snug text-slate-900">{it}</span>
             </li>
           ))}
         </ul>
         {pkg.notice ? (
-          <p
-            className={`text-sm leading-relaxed mb-8 rounded-lg px-3 py-3 border ${
-              isSelected
-                ? "bg-emerald-800 border-white/30 text-white"
-                : "bg-slate-50 border-slate-200 text-slate-900"
-            }`}
-          >
+          <p className="mb-8 rounded-lg border border-slate-200 bg-slate-50 px-3 py-3 text-sm leading-relaxed text-slate-900">
             {pkg.notice}
           </p>
         ) : (
@@ -85,11 +49,7 @@ export default function ProductPackageCard(props: Props): JSX.Element {
       <button
         type="button"
         disabled={isLoading}
-        className={`${
-          isSelected
-            ? "bg-white text-emerald-800 hover:bg-slate-100 border-white"
-            : "border-emerald-700 text-emerald-800 hover:bg-emerald-700 hover:text-white"
-        } w-full border-2 py-3 rounded-lg font-semibold transition-colors disabled:opacity-60 disabled:cursor-wait inline-flex items-center justify-center gap-2`}
+        className="inline-flex w-full items-center justify-center gap-2 rounded-lg border-2 border-emerald-700 py-3 font-semibold text-emerald-800 transition-colors hover:bg-emerald-700 hover:text-white disabled:cursor-wait disabled:opacity-60"
         onClick={() => onBuyClick(pkg)}
       >
         {isLoading ? (

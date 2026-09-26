@@ -459,7 +459,6 @@ function HomeView() {
               <ProductPackageCard
                 key={pkg.id}
                 pkg={pkg}
-                isSelected={pkg.isPopular}
                 isLoading={checkoutPackageId === pkg.id}
                 onBuyClick={handlePricingCheckout}
               />
