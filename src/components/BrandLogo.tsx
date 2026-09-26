@@ -9,7 +9,7 @@ type BrandLogoProps = {
   variant?: "default" | "light";
 };
 
-const LOGO_ASPECT = 931 / 281;
+const LOGO_ASPECT = 931 / 276;
 
 export default function BrandLogo({
   className = "",
@@ -28,6 +28,8 @@ export default function BrandLogo({
       className={`h-auto w-auto object-contain ${className}`}
       style={{ height, width: "auto" }}
       priority
+      quality={100}
+      unoptimized
     />
   );
 }

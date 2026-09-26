@@ -178,7 +178,7 @@ function HomeView() {
             </nav>
 
             <NavItem href="/make-photo">
-              <button className="bg-emerald-600 text-white px-6 py-2 rounded-lg font-semibold hover:bg-emerald-700 transition-colors hidden md:block">
+              <button className="bg-primary text-white px-6 py-2 rounded-lg font-semibold hover:bg-primary-hover transition-colors hidden md:block">
                 Make Photo Online
               </button>
             </NavItem>
@@ -220,9 +220,9 @@ function HomeView() {
                 <span className="block text-white">Photo Maker</span>
               </h1>
               <p className="text-xl text-emerald-50 mb-8 leading-relaxed">
-                100% compliant with ICP and GDRFA specifications. Get your
-                digital photo ready in under 30 seconds—no trip to the mall
-                required.
+                Get government-compliant biometric photos for your UAE documents
+                in seconds. Skip the studio—our AI automatically adjusts your
+                photo to exact UAE specifications with a clean white background.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 mb-8">
                 <NavItem
@@ -443,7 +443,7 @@ function HomeView() {
       </section>
 
       {/* Pricing Section */}
-      <section ref={pricingSectionRef} className="py-20 bg-emerald-50">
+      <section ref={pricingSectionRef} className="py-20 bg-surface">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">

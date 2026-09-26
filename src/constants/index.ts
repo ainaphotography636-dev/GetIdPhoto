@@ -47,7 +47,10 @@ const humanVerifiedFeatures = [
 export const constants = {
   stripePublicKey: `${process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY}`,
   studioName: process.env.NEXT_PUBLIC_STUDIO_NAME || "GetIDPhotoAI",
-  studioDescription: `${process.env.NEXT_PUBLIC_STUDIO_DESCRIPTION}`,
+  studioDescription: envText(
+    process.env.NEXT_PUBLIC_STUDIO_DESCRIPTION,
+    "Get government-compliant biometric photos for your UAE documents in seconds. Skip the studio—our AI automatically adjusts your photo to exact UAE specifications with a clean white background.",
+  ),
   defaultSpecCodes: [
     "uae-passport",
     "uae-id-card",

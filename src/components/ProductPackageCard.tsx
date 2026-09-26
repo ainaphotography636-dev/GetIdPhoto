@@ -32,13 +32,13 @@ export default function ProductPackageCard(props: Props): JSX.Element {
         <ul className="mb-6 space-y-3">
           {descriptions.map((it, i) => (
             <li key={`${i}-${it}`} className="flex items-start space-x-2">
-              <CheckCircle className="mt-0.5 h-5 w-5 flex-shrink-0 text-emerald-700" />
+              <CheckCircle className="mt-0.5 h-5 w-5 flex-shrink-0 text-primary" />
               <span className="leading-snug text-slate-900">{it}</span>
             </li>
           ))}
         </ul>
         {pkg.notice ? (
-          <p className="mb-8 rounded-lg border border-slate-200 bg-slate-50 px-3 py-3 text-sm leading-relaxed text-slate-900">
+          <p className="mb-8 rounded-lg border border-divider bg-surface px-3 py-3 text-sm leading-relaxed text-slate-900">
             {pkg.notice}
           </p>
         ) : (
@@ -49,7 +49,7 @@ export default function ProductPackageCard(props: Props): JSX.Element {
       <button
         type="button"
         disabled={isLoading}
-        className="inline-flex w-full items-center justify-center gap-2 rounded-lg border-2 border-emerald-700 py-3 font-semibold text-emerald-800 transition-colors hover:bg-emerald-700 hover:text-white disabled:cursor-wait disabled:opacity-60"
+        className="inline-flex w-full items-center justify-center gap-2 rounded-lg border-2 border-primary py-3 font-semibold text-primary transition-colors hover:bg-primary hover:text-white disabled:cursor-wait disabled:opacity-60"
         onClick={() => onBuyClick(pkg)}
       >
         {isLoading ? (
