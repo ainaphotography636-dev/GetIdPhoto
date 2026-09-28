@@ -37,7 +37,7 @@ import {
   describePhotoUploadError,
   ensureJpegFile,
 } from "../utils/convertHeicToJpeg";
-import { processPhoto as createCutoutPhoto } from "@/app/actions/processPhoto";
+import { processPhoto as createIdPhoto } from "@/app/actions/processPhoto";
 import BusinessLocationCard from "../components/BusinessLocationCard";
 import BrandLogo from "../components/BrandLogo";
 import PhotoProcessingModal from "../components/PhotoProcessingModal";
@@ -272,7 +272,7 @@ function MakePhotoView() {
 
       const imageDataURL = await compressImageFile(jpegFile);
 
-      const created = await createCutoutPhoto({
+      const created = await createIdPhoto({
         imageBase64: imageDataURL,
         specCode: selectedSpec.specCode,
       });
@@ -287,22 +287,21 @@ function MakePhotoView() {
         specCode: selectedSpec.specCode,
         status: "unpaid" as const,
         croppedNoBgWatermarkImageUrl: created.idPhotoImage,
-        issues: quality.issues.map((issue) => issue.code),
+        issues: [
+          ...quality.issues.map((issue) => issue.code),
+          ...created.issues,
+        ],
       };
       sessionStorage.setItem(
-        `cutout:${created.orderId}`,
-        JSON.stringify({
-          single: created.idPhotoImage,
-          sheet: created.printLayoutImage,
-          quality,
-        }),
+        `idphoto:${created.orderId}`,
+        JSON.stringify({ quality }),
       );
 
       const result: ApiResponse = {
         photoUuid: order.orderId,
         idPhotoUrl: created.idPhotoImage,
-        issues: quality.issues.map((issue) => issue.code),
-        waterMark: false,
+        issues: order.issues,
+        waterMark: created.waterMark,
         quality,
       };
       setProcessedPhoto(result);

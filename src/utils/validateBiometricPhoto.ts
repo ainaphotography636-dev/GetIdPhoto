@@ -204,7 +204,7 @@ function earsLikelyVisible(landmarks: Point[], yaw: number): boolean {
 }
 
 /**
- * Validate biometric passport/ID photo requirements before cutout processing.
+ * Validate biometric passport/ID photo requirements before ID photo processing.
  * Checks: both ears visible, both eyes open, frontal gaze, closed mouth.
  */
 export async function validateBiometricPhoto(
