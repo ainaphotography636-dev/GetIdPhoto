@@ -5,9 +5,12 @@ import NavItem from "@/lib/nav-item";
 import { constants } from "@/constants";
 
 export const metadata: Metadata = {
-  title: `Terms of Service | ${constants.studioName}`,
+  title: "Terms of Service",
   description:
     "Terms of Service for GetIDPhotoAI.ae — rules for using our UAE ID and passport photo platform.",
+  alternates: {
+    canonical: "/terms-of-service",
+  },
 };
 
 const LAST_UPDATED = "September 28, 2026";

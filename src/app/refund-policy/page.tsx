@@ -5,9 +5,12 @@ import NavItem from "@/lib/nav-item";
 import { constants } from "@/constants";
 
 export const metadata: Metadata = {
-  title: `Refund Policy | ${constants.studioName}`,
+  title: "Refund Policy",
   description:
     "Refund Policy for GetIDPhotoAI.ae — including our official government rejection money-back guarantee for Human Verified photos.",
+  alternates: {
+    canonical: "/refund-policy",
+  },
 };
 
 const LAST_UPDATED = "September 28, 2026";

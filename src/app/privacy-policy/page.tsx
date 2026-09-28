@@ -5,9 +5,12 @@ import NavItem from "@/lib/nav-item";
 import { constants } from "@/constants";
 
 export const metadata: Metadata = {
-  title: `Privacy Policy | ${constants.studioName}`,
+  title: "Privacy Policy",
   description:
     "How GetIDPhotoAI.ae collects, uses, and deletes your personal data under UAE PDPL, including our 48-hour photo deletion guarantee.",
+  alternates: {
+    canonical: "/privacy-policy",
+  },
 };
 
 const LAST_UPDATED = "September 28, 2026";
