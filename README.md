@@ -18,8 +18,9 @@ You can also configure environment variables on the deployment platform (e.g., V
 ```env
 # ID Photo API credentials — used to generate ID photos.
 # Get your keys from: https://dashboard.idphoto.ai/
-IDPHOTO_API_KEY=your_idphoto_api_key
-IDPHOTO_API_SECRET=your_idphoto_api_secret
+IDPHOTO_AI_API_KEY=your_idphoto_api_key
+IDPHOTO_AI_API_SECRET=your_idphoto_api_secret
+# Also accepted: IDPHOTO_API_KEY / IDPHOTO_API_SECRET
 
 # Stripe configuration — used for handling payments.
 # Get your keys from: https://dashboard.stripe.com/
@@ -33,7 +34,7 @@ Find more environment variables in the `.env` file.
 
 You can deploy your own version to Vercel with one click:
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fprodonly%2Fpassport-photo-nextjs&env=IDPHOTO_API_KEY,IDPHOTO_API_SECRET,NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY,STRIPE_SECRET_KEY&project-name=passport-photo-nextjs&repository-name=passport-photo-nextjs)
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fprodonly%2Fpassport-photo-nextjs&env=IDPHOTO_AI_API_KEY,IDPHOTO_AI_API_SECRET,NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY,STRIPE_SECRET_KEY&project-name=passport-photo-nextjs&repository-name=passport-photo-nextjs)
 
 ## Live Demo
 

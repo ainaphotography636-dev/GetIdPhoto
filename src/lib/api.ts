@@ -2,16 +2,29 @@ import { NextResponse } from "next/server";
 
 export function readEnv(name: string): string {
   // Bracket access so Next.js does not inline the value at build time.
-  // On Vercel, inlined process.env.IDPHOTO_API_KEY is undefined in preview
+  // On Vercel, inlined process.env.IDPHOTO_* is undefined in preview
   // even when the variable is set for the deployment runtime.
   const value = process.env[name];
   return typeof value === "string" ? value.replace(/\0/g, "").trim() : "";
 }
 
+/** Prefer IDPHOTO_AI_* (Vercel) and fall back to IDPHOTO_* (local .env). */
+export function getIdphotoCredentials(): {
+  apiKey: string;
+  apiSecret: string;
+} {
+  const apiKey =
+    readEnv("IDPHOTO_AI_API_KEY") || readEnv("IDPHOTO_API_KEY");
+  const apiSecret =
+    readEnv("IDPHOTO_AI_API_SECRET") || readEnv("IDPHOTO_API_SECRET");
+  return { apiKey, apiSecret };
+}
+
 function getIdphotoApiEndpoint(): string {
-  const endpoint = readEnv("IDPHOTO_API_ENDPOINT");
+  const endpoint =
+    readEnv("IDPHOTO_AI_API_ENDPOINT") || readEnv("IDPHOTO_API_ENDPOINT");
   if (endpoint.startsWith("http://") || endpoint.startsWith("https://")) {
-    return endpoint;
+    return endpoint.replace(/\/$/, "");
   }
   return "https://api-us.idphotoapp.com";
 }
@@ -19,7 +32,7 @@ function getIdphotoApiEndpoint(): string {
 export const forwardRequest = async (
   method: string,
   path: string,
-  body?: any,
+  body?: Record<string, unknown>,
 ) => {
   const url = `${getIdphotoApiEndpoint()}${path}`;
   const options: RequestInit = {
@@ -38,12 +51,11 @@ export const forwardRequest = async (
 };
 
 function withIdphotoCredentials(body: Record<string, unknown>) {
-  const apiKey = readEnv("IDPHOTO_API_KEY");
-  const apiSecret = readEnv("IDPHOTO_API_SECRET");
+  const { apiKey, apiSecret } = getIdphotoCredentials();
 
   if (!apiKey || !apiSecret) {
     console.error(
-      "[idphoto] IDPHOTO_API_KEY or IDPHOTO_API_SECRET is empty at request time.",
+      "[idphoto] IDPHOTO_AI_API_KEY/SECRET (or IDPHOTO_API_KEY/SECRET) empty at request time.",
       { hasKey: Boolean(apiKey), hasSecret: Boolean(apiSecret) },
     );
   }
@@ -97,7 +109,10 @@ export async function handleForwardRequest<T = any>(
 
     if (!response.ok) {
       const status = response.status;
-      console.error(`Forward request failed: ${status} - ${text}`);
+      console.error("IDPhoto API Error:", {
+        status,
+        responseText: text.slice(0, 2000),
+      });
 
       if (options?.onError) {
         const custom = options.onError({ status, responseText: text });
@@ -126,9 +141,14 @@ export async function handleForwardRequest<T = any>(
 
     return NextResponse.json(data, { status: 200 });
   } catch (err) {
-    console.error("Unexpected error during forwardRequest:", err);
+    console.error("IDPhoto API Error:", err);
     return NextResponse.json(
-      { error: "Internal server error" },
+      {
+        error:
+          err instanceof Error
+            ? `Internal server error: ${err.message}`
+            : "Internal server error",
+      },
       { status: 500 },
     );
   }

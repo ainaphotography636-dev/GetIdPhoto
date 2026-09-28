@@ -228,6 +228,12 @@ export function describePhotoUploadError(err: unknown): string {
     if (/failed to fetch|networkerror|load failed/i.test(err.message)) {
       return "We couldn't reach the photo service. Check your connection and try again.";
     }
+
+    // Surface concrete service/config errors instead of a generic fallback.
+    const message = err.message.trim();
+    if (message) {
+      return message;
+    }
   }
 
   return API_PHOTO_ERROR_MESSAGE;

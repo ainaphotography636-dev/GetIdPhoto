@@ -1,6 +1,6 @@
 "use server";
 
-import { forwardRequest, readEnv } from "@/lib/api";
+import { forwardRequest, getIdphotoCredentials } from "@/lib/api";
 
 const REQUEST_TIMEOUT_MS = 60_000;
 
@@ -25,7 +25,7 @@ export interface ProcessPhotoFailure {
 
 export type ProcessPhotoResult = ProcessPhotoSuccess | ProcessPhotoFailure;
 
-interface IdPhotoWatermarkResponse {
+interface IdPhotoResponse {
   photoUuid?: string;
   idPhotoUrl?: string;
   issues?: string[];
@@ -45,7 +45,7 @@ function toRawBase64(imageBase64: string): string {
 
 function describeIdPhotoError(
   status: number,
-  body: IdPhotoWatermarkResponse,
+  body: IdPhotoResponse,
   raw: string,
 ): string {
   const message = (body.error || body.message || raw || "").trim();
@@ -65,7 +65,7 @@ function describeIdPhotoError(
     combined.includes("apikey") ||
     combined.includes("api key")
   ) {
-    return "IdPhoto.AI rejected the API credentials. Check IDPHOTO_API_KEY and IDPHOTO_API_SECRET on the server.";
+    return "IdPhoto.AI rejected the API credentials. Check IDPHOTO_AI_API_KEY and IDPHOTO_AI_API_SECRET on the server.";
   }
   if (
     combined.includes("face") ||
@@ -84,13 +84,16 @@ function describeIdPhotoError(
 export async function processPhoto(
   input: ProcessPhotoInput,
 ): Promise<ProcessPhotoResult> {
-  const apiKey = readEnv("IDPHOTO_API_KEY");
-  const apiSecret = readEnv("IDPHOTO_API_SECRET");
+  const { apiKey, apiSecret } = getIdphotoCredentials();
   if (!apiKey || !apiSecret) {
+    console.error("IDPhoto API Error: missing credentials", {
+      hasKey: Boolean(apiKey),
+      hasSecret: Boolean(apiSecret),
+    });
     return {
       ok: false,
       error:
-        "Photo service is not configured. Set IDPHOTO_API_KEY and IDPHOTO_API_SECRET on the server.",
+        "Photo service is not configured. Set IDPHOTO_AI_API_KEY and IDPHOTO_AI_API_SECRET on the server.",
     };
   }
 
@@ -108,8 +111,11 @@ export async function processPhoto(
   }
 
   try {
+    // Watermarked preview so paid unlock via getIdPhotoNoWatermark still works.
     const response = await Promise.race([
       forwardRequest("POST", "/v2/makeIdPhotoWatermark", {
+        apiKey,
+        apiSecret,
         specCode,
         imageBase64: image,
         watermarkText: "Preview",
@@ -122,10 +128,15 @@ export async function processPhoto(
     ]);
 
     const raw = await response.text();
-    let body: IdPhotoWatermarkResponse = {};
+    let body: IdPhotoResponse = {};
     try {
-      body = raw ? (JSON.parse(raw) as IdPhotoWatermarkResponse) : {};
-    } catch {
+      body = raw ? (JSON.parse(raw) as IdPhotoResponse) : {};
+    } catch (error) {
+      console.error("IDPhoto API Error:", {
+        status: response.status,
+        parseError: error,
+        responseText: raw.slice(0, 2000),
+      });
       return {
         ok: false,
         error: `IdPhoto.AI returned a non-JSON response (HTTP ${response.status}).`,
@@ -133,6 +144,11 @@ export async function processPhoto(
     }
 
     if (!response.ok || !body.photoUuid || !body.idPhotoUrl) {
+      console.error("IDPhoto API Error:", {
+        status: response.status,
+        body,
+        responseText: raw.slice(0, 2000),
+      });
       return {
         ok: false,
         error: describeIdPhotoError(response.status, body, raw),
@@ -147,6 +163,7 @@ export async function processPhoto(
       waterMark: body.waterMark !== false,
     };
   } catch (error) {
+    console.error("IDPhoto API Error:", error);
     if (error instanceof Error && error.name === "AbortError") {
       return {
         ok: false,
