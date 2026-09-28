@@ -26,12 +26,8 @@ import PhotoGuidelines from "../components/PhotoGuidelines";
 import BrandLogo from "../components/BrandLogo";
 import { useRef, useState, type ReactNode } from "react";
 import NavItem from "../lib/nav-item";
-import { startStripeCheckout } from "../lib/startStripeCheckout";
 import type { ProductPackage } from "../models/ProductPackage";
-import HumanVerifiedContactFields, {
-  isOptionalEmailValid,
-  isOptionalWhatsappValid,
-} from "../components/HumanVerifiedContactFields";
+import { formatPrice } from "../utils/formatPrice";
 
 const testimonials = [
   {
@@ -63,28 +59,28 @@ const photoRequirements: {
 }[] = [
   {
     id: "uae-passport",
-    title: "UAE Passport",
+    title: "UAE Passport Photo",
     description: "Standard biometric dimensions",
     detail: "Official UAE passport photo sizing and biometric framing",
     icon: <Camera className="h-6 w-6" />,
   },
   {
     id: "uae-id-card",
-    title: "Emirates ID",
+    title: "UAE ID Card Photo",
     description: "ICP specifications",
     detail: "Meets ICP Smart Services Emirates ID photo requirements",
     icon: <CreditCard className="h-6 w-6" />,
   },
   {
     id: "dubai-visa",
-    title: "Dubai Tourist / Residency Visa",
+    title: "UAE VISA Photo",
     description: "GDRFA dimensions & white background",
     detail: "GDRFA-compliant sizing with required white background",
     icon: <Plane className="h-6 w-6" />,
   },
   {
     id: "40x60-mm",
-    title: "Standard International",
+    title: "40x60 mm Photo",
     description: "40×60 mm format",
     detail: "Common international 40×60 mm photo format",
     icon: <Ruler className="h-6 w-6" />,
@@ -96,16 +92,6 @@ function HomeView() {
   const [selectedRequirement, setSelectedRequirement] = useState<SpecCode>(
     photoRequirements[0].id,
   );
-  const [checkoutPackageId, setCheckoutPackageId] = useState<string | null>(
-    null,
-  );
-  const [checkoutError, setCheckoutError] = useState("");
-  const [pendingContactPkg, setPendingContactPkg] =
-    useState<ProductPackage | null>(null);
-  const [reviewerEmail, setReviewerEmail] = useState("");
-  const [reviewerWhatsapp, setReviewerWhatsapp] = useState("");
-  const [whatsappQuickLink, setWhatsappQuickLink] = useState(false);
-  const [contactError, setContactError] = useState("");
 
   const servicesSectionRef = useRef<HTMLDivElement | null>(null);
   const pricingSectionRef = useRef<HTMLDivElement | null>(null);
@@ -143,76 +129,20 @@ function HomeView() {
     (item) => item.id === selectedRequirement,
   );
 
-  const handlePricingCheckout = async (pkg: ProductPackage) => {
-    setCheckoutError("");
-    if (pkg.requiresReviewerContact) {
-      setPendingContactPkg(pkg);
-      setContactError("");
-      return;
-    }
+  const standardDigitalPkg = constants.productPackages.find(
+    (pkg) => pkg.id === "basic",
+  );
+  const humanVerifiedPkg = constants.productPackages.find(
+    (pkg) => pkg.id === "standard",
+  );
 
-    setCheckoutPackageId(pkg.id);
-    try {
-      await startStripeCheckout({ packageId: pkg.id });
-    } catch (err) {
-      console.error("[pricing] Checkout failed", err);
-      const message =
-        err instanceof Error
-          ? err.message
-          : "Unable to start checkout. Please try again.";
-      const details =
-        err && typeof err === "object" && "details" in err
-          ? (err as { details?: Record<string, unknown> }).details
-          : undefined;
-      if (details) {
-        console.error("[pricing] Checkout error details", details);
-      }
-      setCheckoutError(message);
-      setCheckoutPackageId(null);
-    }
-  };
-
-  const handleHumanVerifiedCheckout = async () => {
-    if (!pendingContactPkg) {
-      return;
-    }
-    if (!isOptionalEmailValid(reviewerEmail)) {
-      setContactError(
-        "Please enter a valid email address, or leave it blank.",
-      );
-      return;
-    }
-    if (!isOptionalWhatsappValid(reviewerWhatsapp)) {
-      setContactError(
-        "Please enter a valid WhatsApp number, or leave it blank.",
-      );
-      return;
-    }
-
-    setContactError("");
-    setCheckoutError("");
-    setCheckoutPackageId(pendingContactPkg.id);
-    const optionalEmail = reviewerEmail.trim();
-    const optionalWhatsapp = reviewerWhatsapp.trim();
-    try {
-      await startStripeCheckout({
-        packageId: pendingContactPkg.id,
-        ...(optionalEmail ? { email: optionalEmail } : {}),
-        ...(optionalWhatsapp
-          ? { whatsapp: optionalWhatsapp }
-          : whatsappQuickLink
-            ? { whatsapp: "quick-link" }
-            : {}),
-      });
-    } catch (err) {
-      console.error("[pricing] Human Verified checkout failed", err);
-      const message =
-        err instanceof Error
-          ? err.message
-          : "Unable to start checkout. Please try again.";
-      setCheckoutError(message);
-      setCheckoutPackageId(null);
-    }
+  const handlePricingCheckout = (pkg: ProductPackage) => {
+    // Always start with photo upload/processing; payment comes after.
+    const params = new URLSearchParams({
+      pkgId: pkg.id,
+      specCode: selectedRequirement,
+    });
+    router.push(`/make-photo?${params.toString()}`);
   };
 
   return (
@@ -238,7 +168,7 @@ function HomeView() {
 
             <NavItem href="/make-photo">
               <button className="bg-primary text-white px-6 py-2 rounded-lg font-semibold hover:bg-primary-hover transition-colors hidden md:block">
-                Make Photo Online
+                Upload Your Photo
               </button>
             </NavItem>
 
@@ -278,17 +208,74 @@ function HomeView() {
                 UAE Passport, Visa &amp; Emirates ID
                 <span className="block">Photo Maker</span>
               </h1>
-              <p className="mb-8 max-w-xl text-lg leading-relaxed text-emerald-50 md:text-xl">
+              <p className="mb-6 max-w-xl text-lg leading-relaxed text-emerald-50 md:text-xl">
                 Get government-compliant biometric photos for your UAE documents
                 in seconds. Skip the studio—our AI automatically adjusts your
                 photo to exact UAE specifications with a clean white background.
               </p>
+
+              {/* Hero pricing badge — ticket-style dual cards */}
+              <div
+                className="mb-6 grid w-full max-w-xl grid-cols-1 gap-2.5 sm:grid-cols-[1fr_auto_1fr] sm:items-center"
+                aria-label="Service pricing"
+              >
+                <div className="relative overflow-hidden rounded-xl border border-emerald-200/80 bg-white shadow-md">
+                  <div
+                    className="absolute inset-y-0 left-0 w-1 bg-emerald-500"
+                    aria-hidden
+                  />
+                  <div className="flex items-center justify-between gap-3 py-3 pl-4 pr-3">
+                    <div className="min-w-0">
+                      <p className="truncate text-xs font-medium text-slate-500">
+                        {standardDigitalPkg?.name || "Standard Digital"}
+                      </p>
+                      <p className="mt-0.5 font-display text-2xl font-bold tracking-tight text-emerald-800">
+                        {standardDigitalPkg
+                          ? formatPrice(
+                              standardDigitalPkg.priceCents,
+                              standardDigitalPkg.currency,
+                            )
+                          : "AED 20"}
+                      </p>
+                    </div>
+                    <span className="rounded-md bg-emerald-50 px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-emerald-700">
+                      Instant
+                    </span>
+                  </div>
+                </div>
+
+                <span className="hidden text-center text-xs font-semibold uppercase tracking-widest text-emerald-100/80 sm:block">
+                  or
+                </span>
+
+                <div className="relative overflow-hidden rounded-xl border border-white/40 bg-gradient-to-br from-emerald-700 to-emerald-900 shadow-md shadow-emerald-950/30">
+                  <div className="flex items-center justify-between gap-3 px-3 py-3 pl-4">
+                    <div className="min-w-0">
+                      <p className="truncate text-xs font-medium text-emerald-100/90">
+                        {humanVerifiedPkg?.name || "Human Verified"}
+                      </p>
+                      <p className="mt-0.5 font-display text-2xl font-bold tracking-tight text-white">
+                        {humanVerifiedPkg
+                          ? formatPrice(
+                              humanVerifiedPkg.priceCents,
+                              humanVerifiedPkg.currency,
+                            )
+                          : "AED 30"}
+                      </p>
+                    </div>
+                    <span className="rounded-md bg-white px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-emerald-800">
+                      Best
+                    </span>
+                  </div>
+                </div>
+              </div>
+
               <div className="mb-8 flex w-full max-w-xl flex-col gap-3 sm:flex-row sm:items-stretch">
                 <NavItem
                   href="/make-photo"
                   className="inline-flex flex-1 items-center justify-center whitespace-nowrap rounded-lg bg-white px-6 py-4 text-center text-base font-bold text-primary shadow-lg transition-all duration-200 hover:bg-emerald-50 hover:scale-[1.02] sm:text-lg"
                 >
-                  Create Photos Online
+                  Upload Your Photo
                 </NavItem>
                 <NavItem
                   href="/make-photo"
@@ -388,15 +375,15 @@ function HomeView() {
                   key={item.id}
                   type="button"
                   onClick={() => setSelectedRequirement(item.id)}
-                  className={`text-left rounded-xl border-2 p-5 transition-all duration-200 ${
+                  className={`flex h-full min-w-0 flex-col text-left rounded-xl border-2 p-5 transition-all duration-200 ${
                     isSelected
                       ? "border-emerald-600 bg-white shadow-md ring-2 ring-emerald-600/20"
                       : "border-transparent bg-white/80 hover:border-emerald-200 hover:shadow-sm"
                   }`}
                 >
-                  <div className="flex items-start justify-between gap-3 mb-3">
+                  <div className="mb-3 flex items-start justify-between gap-3">
                     <div
-                      className={`rounded-lg p-2 ${
+                      className={`shrink-0 rounded-lg p-2 ${
                         isSelected
                           ? "bg-emerald-600 text-white"
                           : "bg-emerald-100 text-emerald-700"
@@ -405,27 +392,31 @@ function HomeView() {
                       {item.icon}
                     </div>
                     {isSelected ? (
-                      <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-emerald-600 text-white">
+                      <span className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-emerald-600 text-white">
                         <Check className="h-4 w-4" />
                       </span>
-                    ) : null}
+                    ) : (
+                      <span className="h-6 w-6 shrink-0" aria-hidden />
+                    )}
                   </div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-1">
+                  <h3 className="mb-1 text-lg font-semibold leading-snug text-balance text-gray-900">
                     {item.title}
                   </h3>
-                  <p className="text-sm font-medium text-emerald-700 mb-2">
+                  <p className="mb-2 text-sm font-medium text-emerald-700">
                     {item.description}
                   </p>
-                  <p className="text-sm text-gray-600">{item.detail}</p>
+                  <p className="text-sm leading-relaxed text-gray-600">
+                    {item.detail}
+                  </p>
                 </button>
               );
             })}
           </div>
 
           <div className="rounded-xl bg-white border border-emerald-100 p-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div>
+            <div className="min-w-0">
               <p className="text-sm text-gray-500">Selected requirement</p>
-              <p className="text-lg font-semibold text-gray-900">
+              <p className="text-lg font-semibold leading-snug text-balance text-gray-900">
                 {selectedRequirementMeta?.title}
               </p>
               <p className="text-sm text-gray-600">
@@ -502,88 +493,43 @@ function HomeView() {
       </section>
 
       {/* Pricing Section */}
-      <section ref={pricingSectionRef} className="py-20 bg-surface">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+      <section
+        ref={pricingSectionRef}
+        className="relative overflow-hidden py-20"
+        style={{
+          background:
+            "linear-gradient(180deg, #f0f7f3 0%, #ffffff 48%, #f0f7f3 100%)",
+        }}
+      >
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-40 bg-[radial-gradient(ellipse_at_top,_rgba(0,115,47,0.08),_transparent_70%)]" />
+        <div className="relative mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
+          <div className="mb-14 text-center">
+            <p className="mb-2 text-sm font-semibold uppercase tracking-wide text-primary">
+              Pricing
+            </p>
+            <h2 className="font-display mb-4 text-3xl font-bold text-gray-900 md:text-4xl">
               Simple, Transparent Pricing
             </h2>
-            <p className="text-xl text-gray-600">
-              No hidden fees, no surprises.
+            <p className="mx-auto max-w-xl text-lg text-gray-600 md:text-xl">
+              No hidden fees, no surprises. Instant download after payment.
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-8 max-w-3xl mx-auto pt-4">
+          <div className="mx-auto grid max-w-3xl items-stretch gap-6 md:grid-cols-2 md:gap-8">
             {constants.productPackages.map((pkg) => (
               <ProductPackageCard
                 key={pkg.id}
                 pkg={pkg}
-                isLoading={checkoutPackageId === pkg.id}
                 onBuyClick={handlePricingCheckout}
               />
             ))}
           </div>
-          {checkoutError ? (
-            <div className="mt-6 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-center">
-              <p className="text-red-800 text-sm font-semibold">
-                Checkout error
-              </p>
-              <p className="text-red-700 text-sm mt-1 break-words">
-                {checkoutError}
-              </p>
-              <p className="text-red-600/80 text-xs mt-2">
-                Open the browser console for full Stripe diagnostics.
-              </p>
-            </div>
-          ) : null}
+          <p className="mt-6 text-center text-sm text-slate-600">
+            You&apos;ll upload and process your photo first. Payment appears only
+            after your ID photo is ready.
+          </p>
         </div>
       </section>
-
-      {pendingContactPkg ? (
-        <div className="fixed inset-0 z-[80] flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm">
-          <div className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-2xl">
-            <h3 className="text-xl font-bold text-slate-900">
-              Human Verified contact details
-            </h3>
-            <p className="mt-1 mb-4 text-sm text-slate-600">
-              Email and WhatsApp are optional — add either if you want review
-              updates, or continue without them.
-            </p>
-            <HumanVerifiedContactFields
-              email={reviewerEmail}
-              whatsapp={reviewerWhatsapp}
-              onEmailChange={setReviewerEmail}
-              onWhatsappChange={setReviewerWhatsapp}
-              whatsappQuickLink={whatsappQuickLink}
-              onWhatsappQuickLinkChange={setWhatsappQuickLink}
-            />
-            {contactError ? (
-              <p className="mb-3 text-sm text-red-600">{contactError}</p>
-            ) : null}
-            <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
-              <button
-                type="button"
-                className="rounded-lg border border-slate-300 px-5 py-2.5 font-semibold text-slate-700 hover:bg-slate-50"
-                onClick={() => {
-                  setPendingContactPkg(null);
-                  setContactError("");
-                  setWhatsappQuickLink(false);
-                }}
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                disabled={checkoutPackageId === pendingContactPkg.id}
-                className="inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-5 py-2.5 font-semibold text-white hover:opacity-90 disabled:opacity-60"
-                onClick={handleHumanVerifiedCheckout}
-              >
-                Continue to payment
-              </button>
-            </div>
-          </div>
-        </div>
-      ) : null}
 
       {/* Testimonials Section */}
       <section ref={testimonialsSectionRef} className="py-20 bg-white">
@@ -706,22 +652,22 @@ function HomeView() {
               <ul className="space-y-2 text-gray-400">
                 <li>
                   <a href="#services" className="hover:text-white transition-colors" onClick={(e) => { e.preventDefault(); servicesSectionRef.current?.scrollIntoView({ behavior: "smooth" }); }}>
-                    UAE Passport Photos
+                    UAE Passport Photo
                   </a>
                 </li>
                 <li>
                   <a href="#services" className="hover:text-white transition-colors" onClick={(e) => { e.preventDefault(); servicesSectionRef.current?.scrollIntoView({ behavior: "smooth" }); }}>
-                    Emirates ID Photos
+                    UAE ID Card Photo
                   </a>
                 </li>
                 <li>
                   <a href="#services" className="hover:text-white transition-colors" onClick={(e) => { e.preventDefault(); servicesSectionRef.current?.scrollIntoView({ behavior: "smooth" }); }}>
-                    Dubai Visa Photos
+                    UAE VISA Photo
                   </a>
                 </li>
                 <li>
                   <a href="#services" className="hover:text-white transition-colors" onClick={(e) => { e.preventDefault(); servicesSectionRef.current?.scrollIntoView({ behavior: "smooth" }); }}>
-                    Standard International
+                    40x60 mm Photo
                   </a>
                 </li>
               </ul>

@@ -10,9 +10,7 @@ import {
   Camera,
   Upload,
   ArrowRight,
-  CheckCircle,
   AlertCircle,
-  Download,
   MapPin,
   CreditCard,
   ArrowLeft,
@@ -111,9 +109,13 @@ function MakePhotoView() {
     selectedPackage.requiresReviewerContact,
   );
 
-  const formattedPrice = formatPrice(
-    selectedPackage.priceCents,
-    selectedPackage.currency,
+  // Photo-type list always shows Standard Digital pricing (AED 20).
+  const digitalListPkg =
+    constants.productPackages.find((pkg) => pkg.id === "basic") ??
+    constants.productPackages[0];
+  const digitalListPrice = formatPrice(
+    digitalListPkg.priceCents,
+    digitalListPkg.currency,
   );
 
   // Filter specs based on search query
@@ -623,56 +625,6 @@ function MakePhotoView() {
           </div>
         </div>
 
-        {/* How It Works Section - Only show on upload step */}
-        {step === "upload" && !processedPhoto && (
-          <div className="text-center mb-12">
-            <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-              Create Your Passport Photo Online
-            </h1>
-            <p className="text-xl text-gray-600 mb-8">
-              Professional passport photos in minutes - guaranteed government
-              compliant
-            </p>
-
-            {/* Process Steps */}
-            <div className="grid md:grid-cols-3 gap-8 mb-12">
-              <div className="text-center">
-                <div className="bg-emerald-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
-                  <Upload className="h-8 w-8 text-emerald-600" />
-                </div>
-                <h3 className="font-semibold text-gray-900 mb-2">
-                  1. Upload & Preview
-                </h3>
-                <p className="text-sm text-gray-600">
-                  Take or upload a photo, then preview your passport photo
-                </p>
-              </div>
-              <div className="text-center">
-                <div className="bg-emerald-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
-                  <CheckCircle className="h-8 w-8 text-emerald-600" />
-                </div>
-                <h3 className="font-semibold text-gray-900 mb-2">
-                  2. Place Order
-                </h3>
-                <p className="text-sm text-gray-600">
-                  Choose digital files, prints, or both
-                </p>
-              </div>
-              <div className="text-center">
-                <div className="bg-emerald-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
-                  <Download className="h-8 w-8 text-emerald-600" />
-                </div>
-                <h3 className="font-semibold text-gray-900 mb-2">
-                  3. Download/Pickup
-                </h3>
-                <p className="text-sm text-gray-600">
-                  Get digital files instantly or pickup prints
-                </p>
-              </div>
-            </div>
-          </div>
-        )}
-
         {/* Main Content */}
         <div className="bg-white rounded-xl shadow-lg p-8">
           {step === "upload" && (
@@ -700,7 +652,7 @@ function MakePhotoView() {
                       <div className="flex justify-between items-center">
                         <span className="font-medium text-gray-900">{`${spec.specCodeInEnglish} Photo`}</span>
                         <span className="text-emerald-600 font-bold">
-                          {formattedPrice}
+                          {digitalListPrice}
                         </span>
                       </div>
                     </div>
@@ -740,7 +692,7 @@ function MakePhotoView() {
                             <div className="flex justify-between items-center">
                               <span className="font-medium text-gray-900">{`${spec.specCodeInEnglish} Photo`}</span>
                               <span className="text-emerald-600 font-bold">
-                                {formattedPrice}
+                                {digitalListPrice}
                               </span>
                             </div>
                           </button>
@@ -766,57 +718,49 @@ function MakePhotoView() {
                     <div className="flex justify-between items-center">
                       <span className="text-sm text-emerald-800">
                         <strong>Selected:</strong>{" "}
-                        {selectedSpec.specCodeInEnglish}
+                        {selectedSpec.specCodeInEnglish} Photo
                       </span>
                       <span className="text-emerald-600 font-bold">
-                        {formattedPrice}
+                        {digitalListPrice}
                       </span>
                     </div>
                   </div>
                 )}
               </div>
 
-              {/* Photo Requirements */}
-              <div className="mb-8 p-6 bg-emerald-50 border border-emerald-200 rounded-lg">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                  Uploaded Photo Requirements:
-                </h3>
-                <div className="space-y-3 mb-6">
-                  <div className="flex items-start space-x-3">
-                    <span className="flex-shrink-0 w-6 h-6 bg-emerald-600 text-white rounded-full flex items-center justify-center text-sm font-semibold">
-                      1
-                    </span>
-                    <p className="text-gray-700">
-                      Please take a photo with full head and shoulder.
-                    </p>
+              {/* Photo Requirements — compact tips + example */}
+              <div className="mb-6 rounded-xl border border-emerald-200 bg-emerald-50/90 p-4 sm:p-5">
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:gap-5">
+                  <div className="min-w-0 flex-1">
+                    <h3 className="mb-2.5 text-sm font-semibold text-emerald-950 sm:text-base">
+                      Photo tips
+                    </h3>
+                    <ul className="space-y-2">
+                      {[
+                        "Full head and shoulders in frame",
+                        "Even lighting on the face",
+                        "Simple, plain background",
+                      ].map((tip, index) => (
+                        <li
+                          key={tip}
+                          className="flex items-start gap-2 text-sm leading-snug text-slate-700"
+                        >
+                          <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-600 text-[11px] font-semibold text-white">
+                            {index + 1}
+                          </span>
+                          <span>{tip}</span>
+                        </li>
+                      ))}
+                    </ul>
                   </div>
-                  <div className="flex items-start space-x-3">
-                    <span className="flex-shrink-0 w-6 h-6 bg-emerald-600 text-white rounded-full flex items-center justify-center text-sm font-semibold">
-                      2
-                    </span>
-                    <p className="text-gray-700">
-                      Please make sure good and balanced lighting on face.
+                  <div className="shrink-0 sm:w-28">
+                    <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-emerald-800">
+                      Good example
                     </p>
-                  </div>
-                  <div className="flex items-start space-x-3">
-                    <span className="flex-shrink-0 w-6 h-6 bg-emerald-600 text-white rounded-full flex items-center justify-center text-sm font-semibold">
-                      3
-                    </span>
-                    <p className="text-gray-700">
-                      Simple background is preferred.
-                    </p>
-                  </div>
-                </div>
-
-                <div className="border-t border-emerald-200 pt-4">
-                  <h4 className="text-md font-semibold text-gray-900 mb-3">
-                    Good Example:
-                  </h4>
-                  <div className="flex justify-center">
                     <img
                       src={GOOD_EXAMPLE_PHOTO}
                       alt="Good example of passport photo"
-                      className="max-w-xs w-full h-auto rounded-lg shadow-md border border-gray-200"
+                      className="h-auto w-24 rounded-lg border border-emerald-200 object-cover shadow-sm sm:w-28"
                     />
                   </div>
                 </div>
