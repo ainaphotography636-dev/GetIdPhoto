@@ -1,18 +1,26 @@
 import type { JSX } from "react";
 import type { BusinessLocation } from "../models/BusinessLocation";
-import { MapPin, Clock, Phone, Mail } from "lucide-react";
+import { MapPin, Clock, Phone, Mail, MessageCircle } from "lucide-react";
 
 interface Props {
   location: BusinessLocation;
 }
 
+function whatsappHref(location: BusinessLocation): string | null {
+  const digits = (location.whatsapp || location.phone || "").replace(/\D/g, "");
+  if (!digits) {
+    return null;
+  }
+  return `https://wa.me/${digits}`;
+}
+
 export default function BusinessLocationCard({ location }: Props): JSX.Element {
   const hoursLines = location.hours.split("\n");
+  const waLink = whatsappHref(location);
+  const displayPhone = location.phone || (location.whatsapp ? `+${location.whatsapp}` : "");
 
   return (
     <div className="bg-gray-50 rounded-xl p-8">
-      {/* <h3 className="text-2xl font-semibold text-gray-900 mb-6">{location.name} Location</h3> */}
-
       <div className="space-y-6">
         <div className="flex items-start space-x-4">
           <MapPin className="h-6 w-6 text-emerald-600 mt-1 flex-shrink-0" />
@@ -22,17 +30,27 @@ export default function BusinessLocationCard({ location }: Props): JSX.Element {
           </div>
         </div>
 
-        {location.phone ? (
+        {displayPhone ? (
           <div className="flex items-start space-x-4">
             <Phone className="h-6 w-6 text-emerald-600 mt-1 flex-shrink-0" />
             <div>
-              <p className="font-medium text-gray-900">Phone</p>
-              <p className="text-gray-600 mt-1">{location.phone}</p>
+              <p className="font-medium text-gray-900">Phone / WhatsApp</p>
+              {waLink ? (
+                <a
+                  href={waLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-1 inline-flex items-center gap-1.5 text-emerald-700 hover:text-emerald-800"
+                >
+                  <MessageCircle className="h-4 w-4" aria-hidden />
+                  {displayPhone}
+                </a>
+              ) : (
+                <p className="text-gray-600 mt-1">{displayPhone}</p>
+              )}
             </div>
           </div>
-        ) : (
-          ""
-        )}
+        ) : null}
 
         {location.email ? (
           <div className="flex items-start space-x-4">
@@ -42,9 +60,7 @@ export default function BusinessLocationCard({ location }: Props): JSX.Element {
               <p className="text-gray-600 mt-1">{location.email}</p>
             </div>
           </div>
-        ) : (
-          ""
-        )}
+        ) : null}
 
         <div className="flex items-start space-x-4">
           <Clock className="h-6 w-6 text-emerald-600 mt-1 flex-shrink-0" />

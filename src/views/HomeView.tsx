@@ -29,8 +29,8 @@ import NavItem from "../lib/nav-item";
 import { startStripeCheckout } from "../lib/startStripeCheckout";
 import type { ProductPackage } from "../models/ProductPackage";
 import HumanVerifiedContactFields, {
-  isValidEmail,
-  isValidWhatsapp,
+  isOptionalEmailValid,
+  isOptionalWhatsappValid,
 } from "../components/HumanVerifiedContactFields";
 
 const testimonials = [
@@ -104,6 +104,7 @@ function HomeView() {
     useState<ProductPackage | null>(null);
   const [reviewerEmail, setReviewerEmail] = useState("");
   const [reviewerWhatsapp, setReviewerWhatsapp] = useState("");
+  const [whatsappQuickLink, setWhatsappQuickLink] = useState(false);
   const [contactError, setContactError] = useState("");
 
   const servicesSectionRef = useRef<HTMLDivElement | null>(null);
@@ -175,23 +176,33 @@ function HomeView() {
     if (!pendingContactPkg) {
       return;
     }
-    if (!isValidEmail(reviewerEmail)) {
-      setContactError("Please enter a valid email address.");
+    if (!isOptionalEmailValid(reviewerEmail)) {
+      setContactError(
+        "Please enter a valid email address, or leave it blank.",
+      );
       return;
     }
-    if (!isValidWhatsapp(reviewerWhatsapp)) {
-      setContactError("Please enter a valid WhatsApp number.");
+    if (!isOptionalWhatsappValid(reviewerWhatsapp)) {
+      setContactError(
+        "Please enter a valid WhatsApp number, or leave it blank.",
+      );
       return;
     }
 
     setContactError("");
     setCheckoutError("");
     setCheckoutPackageId(pendingContactPkg.id);
+    const optionalEmail = reviewerEmail.trim();
+    const optionalWhatsapp = reviewerWhatsapp.trim();
     try {
       await startStripeCheckout({
         packageId: pendingContactPkg.id,
-        email: reviewerEmail.trim(),
-        whatsapp: reviewerWhatsapp.trim(),
+        ...(optionalEmail ? { email: optionalEmail } : {}),
+        ...(optionalWhatsapp
+          ? { whatsapp: optionalWhatsapp }
+          : whatsappQuickLink
+            ? { whatsapp: "quick-link" }
+            : {}),
       });
     } catch (err) {
       console.error("[pricing] Human Verified checkout failed", err);
@@ -535,13 +546,16 @@ function HomeView() {
               Human Verified contact details
             </h3>
             <p className="mt-1 mb-4 text-sm text-slate-600">
-              Please provide your email and WhatsApp number before paying.
+              Email and WhatsApp are optional — add either if you want review
+              updates, or continue without them.
             </p>
             <HumanVerifiedContactFields
               email={reviewerEmail}
               whatsapp={reviewerWhatsapp}
               onEmailChange={setReviewerEmail}
               onWhatsappChange={setReviewerWhatsapp}
+              whatsappQuickLink={whatsappQuickLink}
+              onWhatsappQuickLinkChange={setWhatsappQuickLink}
             />
             {contactError ? (
               <p className="mb-3 text-sm text-red-600">{contactError}</p>
@@ -553,6 +567,7 @@ function HomeView() {
                 onClick={() => {
                   setPendingContactPkg(null);
                   setContactError("");
+                  setWhatsappQuickLink(false);
                 }}
               >
                 Cancel
@@ -645,12 +660,14 @@ function HomeView() {
               >
                 {constants.businessLocations[0]?.email}
               </a>{" "}
-              ·{" "}
+              · WhatsApp{" "}
               <a
-                href="https://getidphotoai.ae"
+                href={`https://wa.me/${(constants.businessLocations[0]?.whatsapp || "971559461415").replace(/\D/g, "")}`}
+                target="_blank"
+                rel="noopener noreferrer"
                 className="font-semibold text-white underline underline-offset-2"
               >
-                GetIDPhotoAI.ae
+                {constants.businessLocations[0]?.phone || "+971559461415"}
               </a>
             </p>
           </div>
@@ -729,6 +746,16 @@ function HomeView() {
                     {constants.businessLocations[0]?.email}
                   </a>
                 </li>
+                <li>
+                  <a
+                    href={`https://wa.me/${(constants.businessLocations[0]?.whatsapp || "971559461415").replace(/\D/g, "")}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="hover:text-white transition-colors"
+                  >
+                    WhatsApp {constants.businessLocations[0]?.phone || "+971559461415"}
+                  </a>
+                </li>
                 <li>{constants.businessLocations[0]?.hours}</li>
               </ul>
             </div>
@@ -749,19 +776,19 @@ function HomeView() {
             </div>
             <div className="flex space-x-6 mt-4 md:mt-0">
               <a
-                href="#"
+                href="/privacy-policy"
                 className="text-gray-400 hover:text-white transition-colors"
               >
                 Privacy Policy
               </a>
               <a
-                href="#"
+                href="/terms-of-service"
                 className="text-gray-400 hover:text-white transition-colors"
               >
                 Terms of Service
               </a>
               <a
-                href="#"
+                href="/refund-policy"
                 className="text-gray-400 hover:text-white transition-colors"
               >
                 Refund Policy

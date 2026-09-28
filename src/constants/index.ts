@@ -59,10 +59,23 @@ export const constants = {
   ] satisfies SpecCode[],
   businessLocations: [
     {
-      address: `${process.env.NEXT_PUBLIC_BUSINESS_ADDRESS}`,
-      phone: `${process.env.NEXT_PUBLIC_BUSINESS_PHONE}`,
-      email: `${process.env.NEXT_PUBLIC_BUSINESS_EMAIL}`,
-      hours: `${process.env.NEXT_PUBLIC_BUSINESS_HOURS}`,
+      address: envText(
+        process.env.NEXT_PUBLIC_BUSINESS_ADDRESS,
+        "United Arab Emirates",
+      ),
+      phone: envText(process.env.NEXT_PUBLIC_BUSINESS_PHONE, "+971559461415"),
+      whatsapp: envText(
+        process.env.NEXT_PUBLIC_BUSINESS_WHATSAPP,
+        "971559461415",
+      ).replace(/\D/g, ""),
+      email: envText(
+        process.env.NEXT_PUBLIC_BUSINESS_EMAIL,
+        "hello@getidphotoai.ae",
+      ),
+      hours: envText(
+        process.env.NEXT_PUBLIC_BUSINESS_HOURS,
+        "Online 24/7 — Human review: 8:00 AM – 5:00 PM GST",
+      ),
     },
   ] satisfies BusinessLocation[],
   productPackages: [

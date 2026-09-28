@@ -51,8 +51,8 @@ import type { OrderModel } from "../models/OrderModel";
 import NavItem from "../lib/nav-item";
 import ProductPackageCell from "@/components/ProductPackageCell";
 import HumanVerifiedContactFields, {
-  isValidEmail,
-  isValidWhatsapp,
+  isOptionalEmailValid,
+  isOptionalWhatsappValid,
 } from "@/components/HumanVerifiedContactFields";
 const GOOD_EXAMPLE_PHOTO = "/guidelines/good-example-passport-home.jpg";
 
@@ -105,6 +105,7 @@ function MakePhotoView() {
     useState(0);
   const [reviewerEmail, setReviewerEmail] = useState("");
   const [reviewerWhatsapp, setReviewerWhatsapp] = useState("");
+  const [whatsappQuickLink, setWhatsappQuickLink] = useState(false);
 
   const needsReviewerContact = Boolean(
     selectedPackage.requiresReviewerContact,
@@ -386,12 +387,16 @@ function MakePhotoView() {
       }
 
       if (needsReviewerContact) {
-        if (!isValidEmail(reviewerEmail)) {
-          setPaymentMessage("Please enter a valid email address.");
+        if (!isOptionalEmailValid(reviewerEmail)) {
+          setPaymentMessage(
+            "Please enter a valid email address, or leave it blank.",
+          );
           return;
         }
-        if (!isValidWhatsapp(reviewerWhatsapp)) {
-          setPaymentMessage("Please enter a valid WhatsApp number.");
+        if (!isOptionalWhatsappValid(reviewerWhatsapp)) {
+          setPaymentMessage(
+            "Please enter a valid WhatsApp number, or leave it blank.",
+          );
           return;
         }
       }
@@ -399,14 +404,20 @@ function MakePhotoView() {
       setIsConfirmingPayment(true);
       setPaymentMessage("");
 
+      const optionalEmail = reviewerEmail.trim();
+      const optionalWhatsapp = reviewerWhatsapp.trim();
       await startStripeCheckout({
         packageId: selectedPackage.id,
         photoUuid: currentOrder.orderId,
         specCode: selectedSpec.specCode,
         ...(needsReviewerContact
           ? {
-              email: reviewerEmail.trim(),
-              whatsapp: reviewerWhatsapp.trim(),
+              ...(optionalEmail ? { email: optionalEmail } : {}),
+              ...(optionalWhatsapp
+                ? { whatsapp: optionalWhatsapp }
+                : whatsappQuickLink
+                  ? { whatsapp: "quick-link" }
+                  : {}),
             }
           : {}),
       });
@@ -1160,6 +1171,8 @@ function MakePhotoView() {
                   whatsapp={reviewerWhatsapp}
                   onEmailChange={setReviewerEmail}
                   onWhatsappChange={setReviewerWhatsapp}
+                  whatsappQuickLink={whatsappQuickLink}
+                  onWhatsappQuickLinkChange={setWhatsappQuickLink}
                 />
               ) : null}
 
