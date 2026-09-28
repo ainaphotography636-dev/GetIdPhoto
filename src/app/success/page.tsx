@@ -5,8 +5,10 @@ import { useSearchParams } from "next/navigation";
 import { CheckCircle, Download, LoaderCircle } from "lucide-react";
 import NavItem from "@/lib/nav-item";
 import BrandLogo from "@/components/BrandLogo";
+import PhotoQualityFeedback from "@/components/PhotoQualityFeedback";
 import { constants } from "@/constants";
 import { formatPrice } from "@/utils/formatPrice";
+import type { PhotoQualityReport } from "@/utils/analyzePhotoQuality";
 
 type SessionResult = {
   paid: boolean;
@@ -67,6 +69,7 @@ function SuccessContent() {
   const [savedDownloads, setSavedDownloads] = useState<{
     single: string;
     sheet: string;
+    quality?: PhotoQualityReport;
   } | null>(null);
 
   useEffect(() => {
@@ -78,9 +81,17 @@ function SuccessContent() {
       return;
     }
     try {
-      const parsed = JSON.parse(raw) as { single?: string; sheet?: string };
+      const parsed = JSON.parse(raw) as {
+        single?: string;
+        sheet?: string;
+        quality?: PhotoQualityReport;
+      };
       if (parsed.single && parsed.sheet) {
-        setSavedDownloads({ single: parsed.single, sheet: parsed.sheet });
+        setSavedDownloads({
+          single: parsed.single,
+          sheet: parsed.sheet,
+          quality: parsed.quality,
+        });
       }
     } catch {
       setSavedDownloads(null);
@@ -125,6 +136,9 @@ function SuccessContent() {
 
               {sessionId && result.photoUuid ? (
                 <div className="flex flex-col gap-3 mb-4">
+                  {savedDownloads?.quality ? (
+                    <PhotoQualityFeedback report={savedDownloads.quality} />
+                  ) : null}
                   <a
                     href={
                       savedDownloads?.single ||

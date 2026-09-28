@@ -62,10 +62,20 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       typeof body.specCode === "string" && body.specCode.trim()
         ? body.specCode.trim()
         : undefined;
+    const email =
+      typeof body.email === "string" && body.email.trim()
+        ? body.email.trim()
+        : undefined;
+    const whatsapp =
+      typeof body.whatsapp === "string" && body.whatsapp.trim()
+        ? body.whatsapp.trim()
+        : undefined;
 
     console.log("[create-checkout-session] request", {
       packageId,
       hasPhotoUuid: Boolean(photoUuid),
+      hasEmail: Boolean(email),
+      hasWhatsapp: Boolean(whatsapp),
       stripeKeyConfigured: keyDiagnostics.configured,
       stripeKeyPrefix: keyDiagnostics.prefix,
     });
@@ -121,10 +131,28 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     if (specCode) {
       metadata.specCode = specCode;
     }
+    if (email) {
+      metadata.customerEmail = email;
+    }
+    if (whatsapp) {
+      metadata.whatsapp = whatsapp;
+    }
+
+    if (pkg.id === "standard" && (!email || !whatsapp)) {
+      return NextResponse.json(
+        {
+          error:
+            "Human Verified requires email and WhatsApp number so our reviewer can contact you.",
+          stripeKeyConfigured: true,
+        },
+        { status: 400 },
+      );
+    }
 
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
       payment_method_types: ["card"],
+      ...(email ? { customer_email: email } : {}),
       line_items: [
         {
           quantity: 1,

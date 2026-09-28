@@ -106,6 +106,7 @@ export const constants = {
       ),
       isPopular: process.env.NEXT_PUBLIC_STANDARD_PKG_IS_POPULAR === "true",
       isPickUp: process.env.NEXT_PUBLIC_STANDARD_PKG_IS_PICKUP === "true",
+      requiresReviewerContact: true,
     },
   ] satisfies ProductPackage[],
   perAdditionalPhotoPriceInCent: envCount(

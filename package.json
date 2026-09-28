@@ -13,6 +13,7 @@
     "test:inband": "jest --runInBand --config ./src/__tests__/jest-inband.json"
   },
   "dependencies": {
+    "@mediapipe/tasks-vision": "^0.10.21",
     "@stripe/stripe-js": "^7.4.0",
     "clsx": "^2.1.1",
     "compressorjs": "^1.2.1",

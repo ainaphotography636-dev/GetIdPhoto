@@ -28,6 +28,10 @@ import { useRef, useState, type ReactNode } from "react";
 import NavItem from "../lib/nav-item";
 import { startStripeCheckout } from "../lib/startStripeCheckout";
 import type { ProductPackage } from "../models/ProductPackage";
+import HumanVerifiedContactFields, {
+  isValidEmail,
+  isValidWhatsapp,
+} from "../components/HumanVerifiedContactFields";
 
 const testimonials = [
   {
@@ -96,6 +100,11 @@ function HomeView() {
     null,
   );
   const [checkoutError, setCheckoutError] = useState("");
+  const [pendingContactPkg, setPendingContactPkg] =
+    useState<ProductPackage | null>(null);
+  const [reviewerEmail, setReviewerEmail] = useState("");
+  const [reviewerWhatsapp, setReviewerWhatsapp] = useState("");
+  const [contactError, setContactError] = useState("");
 
   const servicesSectionRef = useRef<HTMLDivElement | null>(null);
   const pricingSectionRef = useRef<HTMLDivElement | null>(null);
@@ -135,6 +144,12 @@ function HomeView() {
 
   const handlePricingCheckout = async (pkg: ProductPackage) => {
     setCheckoutError("");
+    if (pkg.requiresReviewerContact) {
+      setPendingContactPkg(pkg);
+      setContactError("");
+      return;
+    }
+
     setCheckoutPackageId(pkg.id);
     try {
       await startStripeCheckout({ packageId: pkg.id });
@@ -151,6 +166,39 @@ function HomeView() {
       if (details) {
         console.error("[pricing] Checkout error details", details);
       }
+      setCheckoutError(message);
+      setCheckoutPackageId(null);
+    }
+  };
+
+  const handleHumanVerifiedCheckout = async () => {
+    if (!pendingContactPkg) {
+      return;
+    }
+    if (!isValidEmail(reviewerEmail)) {
+      setContactError("Please enter a valid email address.");
+      return;
+    }
+    if (!isValidWhatsapp(reviewerWhatsapp)) {
+      setContactError("Please enter a valid WhatsApp number.");
+      return;
+    }
+
+    setContactError("");
+    setCheckoutError("");
+    setCheckoutPackageId(pendingContactPkg.id);
+    try {
+      await startStripeCheckout({
+        packageId: pendingContactPkg.id,
+        email: reviewerEmail.trim(),
+        whatsapp: reviewerWhatsapp.trim(),
+      });
+    } catch (err) {
+      console.error("[pricing] Human Verified checkout failed", err);
+      const message =
+        err instanceof Error
+          ? err.message
+          : "Unable to start checkout. Please try again.";
       setCheckoutError(message);
       setCheckoutPackageId(null);
     }
@@ -198,8 +246,8 @@ function HomeView() {
       <section className="pt-24 bg-gradient-to-br from-emerald-800 via-emerald-900 to-neutral-950 text-white">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
-            <div>
-              <div className="flex items-center space-x-2 mb-4">
+            <div className="flex flex-col items-start text-left">
+              <div className="mb-4 flex items-center gap-2">
                 <div className="flex">
                   {[...Array(5)].map((_, i) => (
                     <Star
@@ -212,57 +260,57 @@ function HomeView() {
                   Rated 4.9/5 by 2,500+ customers
                 </span>
               </div>
-              <p className="text-lg font-semibold tracking-wide text-emerald-200 mb-3">
+              <p className="mb-3 text-lg font-semibold tracking-wide text-emerald-200">
                 {constants.studioName || "GetIDPhotoAI"}
               </p>
-              <h1 className="font-display text-4xl md:text-5xl lg:text-[3.25rem] font-bold leading-[1.15] tracking-tight text-white mb-6">
+              <h1 className="font-display mb-6 max-w-xl text-4xl font-bold leading-[1.15] tracking-tight text-white md:text-5xl lg:text-[3.25rem]">
                 UAE Passport, Visa &amp; Emirates ID
-                <span className="block text-white">Photo Maker</span>
+                <span className="block">Photo Maker</span>
               </h1>
-              <p className="text-xl text-emerald-50 mb-8 leading-relaxed">
+              <p className="mb-8 max-w-xl text-lg leading-relaxed text-emerald-50 md:text-xl">
                 Get government-compliant biometric photos for your UAE documents
                 in seconds. Skip the studio—our AI automatically adjusts your
                 photo to exact UAE specifications with a clean white background.
               </p>
-              <div className="flex flex-col sm:flex-row gap-4 mb-8">
+              <div className="mb-8 flex w-full max-w-xl flex-col gap-3 sm:flex-row sm:items-stretch">
                 <NavItem
                   href="/make-photo"
-                  className="bg-white text-emerald-800 px-8 py-4 rounded-lg font-bold text-lg hover:bg-emerald-50 transform hover:scale-105 transition-all duration-200 shadow-lg text-center"
+                  className="inline-flex flex-1 items-center justify-center whitespace-nowrap rounded-lg bg-white px-6 py-4 text-center text-base font-bold text-primary shadow-lg transition-all duration-200 hover:bg-emerald-50 hover:scale-[1.02] sm:text-lg"
                 >
                   Create Photos Online
                 </NavItem>
                 <NavItem
                   href="/make-photo"
-                  className="border-2 border-red-400 text-white px-8 py-4 rounded-lg font-bold text-lg hover:bg-red-600 hover:border-red-600 transition-all duration-200 text-center inline-flex items-center justify-center gap-2"
+                  className="inline-flex flex-1 items-center justify-center gap-2 whitespace-nowrap rounded-lg border-2 border-white px-6 py-4 text-center text-base font-bold text-white transition-all duration-200 hover:bg-white hover:text-primary sm:text-lg"
                 >
-                  <ShieldCheck className="h-5 w-5" />
+                  <ShieldCheck className="h-5 w-5 shrink-0" />
                   Human Verification
                 </NavItem>
               </div>
-              <div className="flex flex-col sm:flex-row sm:flex-wrap gap-3">
-                <div className="inline-flex items-center gap-2 rounded-full bg-white/10 border border-white/20 px-3 py-2">
-                  <BadgeCheck className="h-4 w-4 text-red-400 flex-shrink-0" />
-                  <span className="text-sm text-emerald-50">
+              <div className="flex w-full max-w-xl flex-wrap gap-2">
+                <div className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-2">
+                  <BadgeCheck className="h-4 w-4 shrink-0 text-emerald-200" />
+                  <span className="text-sm whitespace-nowrap text-emerald-50">
                     ICP Smart Services Compliant
                   </span>
                 </div>
-                <div className="inline-flex items-center gap-2 rounded-full bg-white/10 border border-white/20 px-3 py-2">
-                  <FileCheck2 className="h-4 w-4 text-red-400 flex-shrink-0" />
-                  <span className="text-sm text-emerald-50">
+                <div className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-2">
+                  <FileCheck2 className="h-4 w-4 shrink-0 text-emerald-200" />
+                  <span className="text-sm whitespace-nowrap text-emerald-50">
                     GDRFA Approved Formats
                   </span>
                 </div>
-                <div className="inline-flex items-center gap-2 rounded-full bg-white/10 border border-white/20 px-3 py-2">
-                  <Send className="h-4 w-4 text-red-400 flex-shrink-0" />
-                  <span className="text-sm text-emerald-50">
+                <div className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-2">
+                  <Send className="h-4 w-4 shrink-0 text-emerald-200" />
+                  <span className="text-sm whitespace-nowrap text-emerald-50">
                     Instant Digital Delivery
                   </span>
                 </div>
               </div>
             </div>
             <div className="relative">
-              <div className="bg-white rounded-2xl shadow-2xl p-8 transform hover:scale-105 transition-transform duration-300">
-                <div className="relative aspect-square overflow-hidden rounded-lg mb-4">
+              <div className="transform rounded-2xl bg-white p-8 shadow-2xl transition-transform duration-300 hover:scale-105">
+                <div className="relative mb-4 aspect-square overflow-hidden rounded-lg">
                   <Image
                     src="/hero-uae.jpg"
                     alt="Customer with digital and printed passport photos"
@@ -273,10 +321,10 @@ function HomeView() {
                   />
                 </div>
                 <div className="text-center">
-                  <p className="text-gray-600 font-semibold">
+                  <p className="font-semibold text-gray-600">
                     Government Compliant
                   </p>
-                  <p className="text-gray-500 text-sm">
+                  <p className="text-sm text-gray-500">
                     Meets all official requirements
                   </p>
                 </div>
@@ -479,6 +527,48 @@ function HomeView() {
           ) : null}
         </div>
       </section>
+
+      {pendingContactPkg ? (
+        <div className="fixed inset-0 z-[80] flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-2xl">
+            <h3 className="text-xl font-bold text-slate-900">
+              Human Verified contact details
+            </h3>
+            <p className="mt-1 mb-4 text-sm text-slate-600">
+              Please provide your email and WhatsApp number before paying.
+            </p>
+            <HumanVerifiedContactFields
+              email={reviewerEmail}
+              whatsapp={reviewerWhatsapp}
+              onEmailChange={setReviewerEmail}
+              onWhatsappChange={setReviewerWhatsapp}
+            />
+            {contactError ? (
+              <p className="mb-3 text-sm text-red-600">{contactError}</p>
+            ) : null}
+            <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+              <button
+                type="button"
+                className="rounded-lg border border-slate-300 px-5 py-2.5 font-semibold text-slate-700 hover:bg-slate-50"
+                onClick={() => {
+                  setPendingContactPkg(null);
+                  setContactError("");
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={checkoutPackageId === pendingContactPkg.id}
+                className="inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-5 py-2.5 font-semibold text-white hover:opacity-90 disabled:opacity-60"
+                onClick={handleHumanVerifiedCheckout}
+              >
+                Continue to payment
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
 
       {/* Testimonials Section */}
       <section ref={testimonialsSectionRef} className="py-20 bg-white">

@@ -40,18 +40,28 @@ import {
 import { processPhoto as createCutoutPhoto } from "@/app/actions/processPhoto";
 import BusinessLocationCard from "../components/BusinessLocationCard";
 import BrandLogo from "../components/BrandLogo";
+import PhotoProcessingModal from "../components/PhotoProcessingModal";
+import PhotoQualityFeedback from "../components/PhotoQualityFeedback";
 import type { ProductPackage } from "../models/ProductPackage";
-import { getIssueMessage } from "../utils/getIssueMessage";
+import {
+  analyzePhotoQuality,
+  type PhotoQualityReport,
+} from "../utils/analyzePhotoQuality";
 import type { OrderModel } from "../models/OrderModel";
 import NavItem from "../lib/nav-item";
 import ProductPackageCell from "@/components/ProductPackageCell";
-import goodSampleImage from "@/assets/good3.png";
+import HumanVerifiedContactFields, {
+  isValidEmail,
+  isValidWhatsapp,
+} from "@/components/HumanVerifiedContactFields";
+const GOOD_EXAMPLE_PHOTO = "/guidelines/good-example-passport-home.jpg";
 
 interface ApiResponse {
   photoUuid: string;
   idPhotoUrl: string;
   issues?: string[];
   waterMark: boolean;
+  quality?: PhotoQualityReport;
 }
 
 const defaultSpecs: PhotoSpec[] = constants.defaultSpecCodes.map(
@@ -72,6 +82,9 @@ function MakePhotoView() {
   );
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string>("");
+  const [qualityReport, setQualityReport] = useState<PhotoQualityReport | null>(
+    null,
+  );
   const [showOriginal, setShowOriginal] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -90,6 +103,12 @@ function MakePhotoView() {
   const [paymentMessage, setPaymentMessage] = useState("");
   const [additionalPrintedPhotoNumber, setAdditionalPrintedPhotoNumber] =
     useState(0);
+  const [reviewerEmail, setReviewerEmail] = useState("");
+  const [reviewerWhatsapp, setReviewerWhatsapp] = useState("");
+
+  const needsReviewerContact = Boolean(
+    selectedPackage.requiresReviewerContact,
+  );
 
   const formattedPrice = formatPrice(
     selectedPackage.priceCents,
@@ -115,6 +134,7 @@ function MakePhotoView() {
 
     // Reset processed photo when new file is selected
     setProcessedPhoto(null);
+    setQualityReport(null);
     // Reset show original state
     setShowOriginal(false);
     setError("");
@@ -144,6 +164,7 @@ function MakePhotoView() {
     setSelectedFile(null);
     setPreviewUrl("");
     setProcessedPhoto(null);
+    setQualityReport(null);
     setShowOriginal(false);
 
     try {
@@ -208,9 +229,47 @@ function MakePhotoView() {
     setIsProcessing(true);
     setError("");
     setCurrentOrder(null);
+    setQualityReport(null);
+    setProcessedPhoto(null);
 
     try {
       const jpegFile = await ensureJpegFile(file);
+
+      // Blur check on the original upload (no resolution warnings)
+      let quality: PhotoQualityReport = {
+        ok: true,
+        score: "good",
+        sharpness: 100,
+        brightness: 128,
+        issues: [],
+      };
+      try {
+        quality = await analyzePhotoQuality(jpegFile, {
+          fileBytes: jpegFile.size,
+        });
+      } catch (qualityErr) {
+        console.warn("Photo quality check failed", qualityErr);
+      }
+
+      // Camera / large files never get a low-resolution warning
+      if (jpegFile.size >= 100_000) {
+        quality = {
+          ...quality,
+          issues: quality.issues.filter(
+            (issue) => issue.code !== "ISSUE_PHOTO_TOO_SMALL",
+          ),
+        };
+      }
+
+      const hasCritical = quality.issues.some(
+        (issue) => issue.severity === "critical",
+      );
+      quality = {
+        ...quality,
+        ok: true,
+        score: hasCritical ? "poor" : "good",
+      };
+
       const imageDataURL = await compressImageFile(jpegFile);
 
       const created = await createCutoutPhoto({
@@ -221,31 +280,33 @@ function MakePhotoView() {
         throw new Error(created.error);
       }
 
+      setQualityReport(quality);
+
       const order = {
         orderId: created.orderId,
         specCode: selectedSpec.specCode,
         status: "unpaid" as const,
         croppedNoBgWatermarkImageUrl: created.idPhotoImage,
-        issues: [],
+        issues: quality.issues.map((issue) => issue.code),
       };
       sessionStorage.setItem(
         `cutout:${created.orderId}`,
         JSON.stringify({
           single: created.idPhotoImage,
           sheet: created.printLayoutImage,
+          quality,
         }),
       );
 
       const result: ApiResponse = {
         photoUuid: order.orderId,
         idPhotoUrl: created.idPhotoImage,
-        issues: [],
+        issues: quality.issues.map((issue) => issue.code),
         waterMark: false,
+        quality,
       };
       setProcessedPhoto(result);
-      // Reset show original state when new photo is processed
       setShowOriginal(false);
-
       setCurrentOrder(order);
     } catch (err) {
       console.error("API Error:", err);
@@ -263,10 +324,18 @@ function MakePhotoView() {
   const resetToUpload = () => {
     setStep("upload");
     setProcessedPhoto(null);
+    setQualityReport(null);
     setPreviewUrl("");
     setSelectedFile(null);
     setError("");
     setShowOriginal(false);
+  };
+
+  const requestDifferentPhoto = () => {
+    resetToUpload();
+    window.setTimeout(() => {
+      fileInputRef.current?.click();
+    }, 50);
   };
 
   const handleSpecSelect = (spec: PhotoSpec) => {
@@ -317,6 +386,17 @@ function MakePhotoView() {
         throw new Error("Create a photo before paying.");
       }
 
+      if (needsReviewerContact) {
+        if (!isValidEmail(reviewerEmail)) {
+          setPaymentMessage("Please enter a valid email address.");
+          return;
+        }
+        if (!isValidWhatsapp(reviewerWhatsapp)) {
+          setPaymentMessage("Please enter a valid WhatsApp number.");
+          return;
+        }
+      }
+
       setIsConfirmingPayment(true);
       setPaymentMessage("");
 
@@ -324,6 +404,12 @@ function MakePhotoView() {
         packageId: selectedPackage.id,
         photoUuid: currentOrder.orderId,
         specCode: selectedSpec.specCode,
+        ...(needsReviewerContact
+          ? {
+              email: reviewerEmail.trim(),
+              whatsapp: reviewerWhatsapp.trim(),
+            }
+          : {}),
       });
     } catch (error) {
       console.error("[make-photo] Payment submit failed", error);
@@ -368,6 +454,96 @@ function MakePhotoView() {
     if (matched) {
       setSelectedPackage(matched);
     }
+  }, [searchParams]);
+
+  // Preview demos: /make-photo?demo=scanning | quality-good | quality-fair | quality-poor
+  useEffect(() => {
+    const demo = searchParams.get("demo");
+    if (!demo) {
+      return;
+    }
+
+    const sampleUrl = GOOD_EXAMPLE_PHOTO;
+    setPreviewUrl(sampleUrl);
+    setShowOriginal(false);
+    setError("");
+
+    if (demo === "scanning") {
+      setIsProcessing(true);
+      setProcessedPhoto(null);
+      setQualityReport(null);
+      return;
+    }
+
+    setIsProcessing(false);
+
+    const demoReports: Record<string, PhotoQualityReport> = {
+      "quality-good": {
+        ok: true,
+        score: "good",
+        sharpness: 80,
+        brightness: 130,
+        issues: [],
+      },
+      "quality-fair": {
+        ok: true,
+        score: "fair",
+        sharpness: 28,
+        brightness: 150,
+        issues: [
+          {
+            code: "ISSUE_PHOTO_SHARPNESS_BAD",
+            severity: "warning",
+            title: "Photo sharpness is fair",
+            message:
+              "The photo may look slightly soft. For best results, upload a clearer photo taken in good light.",
+          },
+          {
+            code: "ISSUE_FACE_LIGHT_NOT_BALANCE",
+            severity: "warning",
+            title: "Uneven lighting",
+            message:
+              "One side of the photo is much brighter than the other. Please take a new photo facing the light directly.",
+          },
+        ],
+      },
+      "quality-poor": {
+        ok: false,
+        score: "poor",
+        sharpness: 8,
+        brightness: 40,
+        issues: [
+          {
+            code: "ISSUE_PHOTO_SHARPNESS_BAD",
+            severity: "critical",
+            title: "Photo looks blurry",
+            message:
+              "The photo is not sharp enough and may be rejected. Please upload a different, clearer photo.",
+          },
+          {
+            code: "ISSUE_PHOTO_TOO_DARK",
+            severity: "critical",
+            title: "Photo is too dark",
+            message:
+              "Lighting is too low. Please upload a different photo facing a light source.",
+          },
+        ],
+      },
+    };
+
+    const report = demoReports[demo];
+    if (!report) {
+      return;
+    }
+
+    setQualityReport(report);
+    setProcessedPhoto({
+      photoUuid: `demo_${demo}`,
+      idPhotoUrl: sampleUrl,
+      issues: report.issues.map((issue) => issue.code),
+      waterMark: false,
+      quality: report,
+    });
   }, [searchParams]);
 
   return (
@@ -628,7 +804,7 @@ function MakePhotoView() {
                   </h4>
                   <div className="flex justify-center">
                     <img
-                      src={goodSampleImage.src}
+                      src={GOOD_EXAMPLE_PHOTO}
                       alt="Good example of passport photo"
                       className="max-w-xs w-full h-auto rounded-lg shadow-md border border-gray-200"
                     />
@@ -736,46 +912,26 @@ function MakePhotoView() {
                     </div>
                   )}
 
-                  {/* Photo Quality Issues */}
-                  {processedPhoto?.issues &&
-                    processedPhoto.issues.length > 0 && (
-                      <div className="mt-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-                        <div className="flex items-start space-x-2">
-                          <AlertCircle className="h-5 w-5 text-yellow-600 mt-0.5" />
-                          <div>
-                            <h4 className="font-medium text-yellow-800">
-                              We found some issues:
-                            </h4>
-                            <ul className="mt-2 space-y-1">
-                              {processedPhoto.issues.map((issue, index) => (
-                                <li
-                                  key={index}
-                                  className="text-yellow-700 text-sm"
-                                >
-                                  • {getIssueMessage(issue)}
-                                </li>
-                              ))}
-                            </ul>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-
                   {/* Action buttons when processed photo is ready */}
                   {processedPhoto && (
-                    <div className="mt-6 flex flex-col md:flex-row justify-center gap-4">
-                      <button
-                        onClick={() => setStep("purchase")}
-                        className="bg-emerald-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-emerald-700 transition-colors"
-                      >
-                        I Like It - Place Order
-                      </button>
-                      <button
-                        onClick={resetToUpload}
-                        className="bg-gray-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-gray-700 transition-colors"
-                      >
-                        Retake Photo
-                      </button>
+                    <div className="mt-6 flex flex-col items-center">
+                      {qualityReport ? (
+                        <PhotoQualityFeedback report={qualityReport} />
+                      ) : null}
+                      <div className="flex flex-col md:flex-row justify-center gap-4">
+                        <button
+                          onClick={() => setStep("purchase")}
+                          className="bg-emerald-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-emerald-700 transition-colors"
+                        >
+                          I Like It - Place Order
+                        </button>
+                        <button
+                          onClick={requestDifferentPhoto}
+                          className="bg-gray-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-gray-700 transition-colors"
+                        >
+                          Upload a Different Photo
+                        </button>
+                      </div>
                     </div>
                   )}
                 </div>
@@ -999,6 +1155,15 @@ function MakePhotoView() {
               className="pb-4"
               onSubmit={handleStripeFormSubmit}
             >
+              {needsReviewerContact ? (
+                <HumanVerifiedContactFields
+                  email={reviewerEmail}
+                  whatsapp={reviewerWhatsapp}
+                  onEmailChange={setReviewerEmail}
+                  onWhatsappChange={setReviewerWhatsapp}
+                />
+              ) : null}
+
               <div className="pt-4">
                 <button
                   id="submit"
@@ -1064,6 +1229,11 @@ function MakePhotoView() {
           </div>
         </div>
       </footer>
+
+      <PhotoProcessingModal
+        open={isProcessing && Boolean(previewUrl)}
+        previewUrl={previewUrl}
+      />
     </div>
   );
 }

@@ -23,8 +23,15 @@ export async function startStripeCheckout(options: {
   packageId: string;
   photoUuid?: string;
   specCode?: string;
+  email?: string;
+  whatsapp?: string;
 }): Promise<CheckoutStartResult> {
-  console.log("[checkout] Starting Stripe Checkout", options);
+  console.log("[checkout] Starting Stripe Checkout", {
+    packageId: options.packageId,
+    hasPhotoUuid: Boolean(options.photoUuid),
+    hasEmail: Boolean(options.email),
+    hasWhatsapp: Boolean(options.whatsapp),
+  });
 
   let res: Response;
   try {

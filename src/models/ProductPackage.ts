@@ -8,4 +8,6 @@ export interface ProductPackage {
   isPopular?: boolean;
   isPickUp?: boolean;
   printedPhotoNumber: number;
+  /** Collect email + WhatsApp before checkout (Human Verified review). */
+  requiresReviewerContact?: boolean;
 }

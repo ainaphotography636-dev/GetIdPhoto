@@ -8,7 +8,11 @@ const issueToMessage: Record<string, string> = {
   ISSUE_BOTTOM_NOT_FULL:
     "Empty space found in the bottom of the photo, or your shoulders were not correctly included. \n This is because your camera is too close to you. \n Please take a new photo to include your entire upper body. Good to have someone to take the photo for you.",
   ISSUE_EXPRESSION_NOT_NEUTRAL:
-    "Expression not neutral. Please maintain a neutral expression. A small smile is acceptable.",
+    "Expression not neutral. Please maintain a neutral expression with your mouth closed. A small closed-mouth smile is acceptable.",
+  ISSUE_EYES_CLOSED:
+    "Both eyes must be open. Please upload a photo with both eyes clearly open and looking at the camera.",
+  ISSUE_EARS_NOT_VISIBLE:
+    "Both ears must be clearly visible. Pull hair back if needed and face the camera straight on.",
   ISSUE_EYEGLASSES_NOT_ALLOWED:
     "Eyeglasses is not allowed in this use case. Please remove your eyeglasses.",
   ISSUE_FACE_BRIGHTNESS_BAD:
