@@ -24,6 +24,7 @@ import type { SpecCode } from "../models/PhotoSpec";
 import ProductPackageCard from "../components/ProductPackageCard";
 import PhotoGuidelines from "../components/PhotoGuidelines";
 import BrandLogo from "../components/BrandLogo";
+import FaqSection from "../components/FaqSection";
 import { useRef, useState, type ReactNode } from "react";
 import NavItem from "../lib/nav-item";
 import type { ProductPackage } from "../models/ProductPackage";
@@ -96,6 +97,7 @@ function HomeView() {
   const servicesSectionRef = useRef<HTMLDivElement | null>(null);
   const pricingSectionRef = useRef<HTMLDivElement | null>(null);
   const testimonialsSectionRef = useRef<HTMLDivElement | null>(null);
+  const faqSectionRef = useRef<HTMLDivElement | null>(null);
   const contactSectionRef = useRef<HTMLDivElement | null>(null);
 
   const navItems = [
@@ -115,6 +117,12 @@ function HomeView() {
       label: "Testimonials",
       handler: () => {
         testimonialsSectionRef.current?.scrollIntoView({ behavior: "smooth" });
+      },
+    },
+    {
+      label: "FAQ",
+      handler: () => {
+        faqSectionRef.current?.scrollIntoView({ behavior: "smooth" });
       },
     },
     {
@@ -569,6 +577,10 @@ function HomeView() {
           </div>
         </div>
       </section>
+
+      <div ref={faqSectionRef}>
+        <FaqSection />
+      </div>
 
       {/* CTA Section */}
       <section className="py-20 bg-gradient-to-r from-emerald-800 via-emerald-900 to-neutral-950 text-white">

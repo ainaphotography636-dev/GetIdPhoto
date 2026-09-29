@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import HomeView from "@/views/HomeView";
+import FaqJsonLd from "@/components/FaqJsonLd";
 import {
   DEFAULT_DESCRIPTION,
   DEFAULT_TITLE,
@@ -24,5 +25,10 @@ export const metadata: Metadata = {
 };
 
 export default function Home() {
-  return <HomeView />;
+  return (
+    <>
+      <FaqJsonLd />
+      <HomeView />
+    </>
+  );
 }
