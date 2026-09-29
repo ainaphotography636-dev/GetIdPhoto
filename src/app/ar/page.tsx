@@ -9,18 +9,18 @@ import {
 } from "@/lib/seo";
 
 export async function generateMetadata(): Promise<Metadata> {
-  const dictionary = await getDictionary("en");
-  const pageUrl = homeUrlForLocale("en");
+  const dictionary = await getDictionary("ar");
+  const pageUrl = homeUrlForLocale("ar");
 
   return {
     title: {
       absolute: dictionary.meta.title,
     },
     description: dictionary.meta.description,
-    alternates: buildHomeAlternates("en"),
+    alternates: buildHomeAlternates("ar"),
     openGraph: {
-      locale: "en_AE",
-      alternateLocale: ["ar_AE"],
+      locale: "ar_AE",
+      alternateLocale: ["en_AE"],
       title: dictionary.meta.title,
       description: dictionary.meta.description,
       url: pageUrl,
@@ -29,13 +29,13 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-export default async function Home() {
-  const dictionary = await getDictionary("en");
+export default async function ArabicHome() {
+  const dictionary = await getDictionary("ar");
 
   return (
     <>
-      <FaqJsonLd items={dictionary.faq.items} locale="en" />
-      <HomeView locale="en" dictionary={dictionary} />
+      <FaqJsonLd items={dictionary.faq.items} locale="ar" />
+      <HomeView locale="ar" dictionary={dictionary} />
     </>
   );
 }

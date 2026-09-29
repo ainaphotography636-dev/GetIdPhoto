@@ -48,6 +48,9 @@ import {
 import type { OrderModel } from "../models/OrderModel";
 import NavItem from "../lib/nav-item";
 import ProductPackageCell from "@/components/ProductPackageCell";
+import LanguageSwitcher from "@/components/LanguageSwitcher";
+import { useI18n } from "@/i18n/LocaleProvider";
+import { homePath } from "@/i18n/config";
 import HumanVerifiedContactFields, {
   isOptionalEmailValid,
   isOptionalWhatsappValid,
@@ -70,7 +73,31 @@ const defaultProductPackage: ProductPackage =
   constants.productPackages[0];
 
 function MakePhotoView() {
+  const { locale, dictionary } = useI18n();
+  const isAr = locale === "ar";
+  const t = dictionary.makePhoto;
+  const homeHref = homePath(locale);
   const searchParams = useSearchParams();
+
+  const copy = {
+    backHome: isAr ? t.backHome : "Back to Home",
+    stepUpload: isAr ? t.stepUpload : "Upload & Preview",
+    stepPurchase: isAr ? t.stepPurchase : "Place Order",
+    uploadCta: isAr ? t.uploadCta : "Upload Your Photo",
+    searchPlaceholder: isAr
+      ? t.searchPlaceholder
+      : "Search for other photo types (e.g., China Visa, UK Passport)...",
+    tipsTitle: isAr ? t.tipsTitle : "Photo tips",
+    tips: isAr
+      ? t.tips
+      : [
+          "Full head and shoulders in frame",
+          "Even lighting on the face",
+          "Simple, plain background",
+        ],
+    showProcessed: isAr ? t.showProcessed : "Show passport photo",
+    showOriginal: isAr ? t.showOriginal : "Show original photo",
+  };
 
   const [step, setStep] = useState<"upload" | "purchase">("upload");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -561,30 +588,37 @@ function MakePhotoView() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <header className="bg-white shadow-sm border-b">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-24">
-            <NavItem href="/">
+      <header className="border-b bg-white shadow-sm">
+        <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+          <div className="flex h-24 items-center justify-between gap-3">
+            <NavItem href={homeHref}>
               <BrandLogo height={64} />
             </NavItem>
 
-            <NavItem
-              href="/"
-              className="text-gray-600 hover:text-emerald-600 font-medium"
-            >
-              Back to Home
-            </NavItem>
+            <div className="flex items-center gap-2 sm:gap-3">
+              <LanguageSwitcher
+                locale={locale}
+                switchLabel={dictionary.language.switchTo}
+                ariaLabel={dictionary.language.label}
+              />
+              <NavItem
+                href={homeHref}
+                className="font-medium text-gray-600 hover:text-emerald-600"
+              >
+                {copy.backHome}
+              </NavItem>
+            </div>
           </div>
         </div>
       </header>
 
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <div className="mx-auto max-w-4xl px-4 py-12 sm:px-6 lg:px-8">
         {/* Progress Steps */}
         <div className="mb-8">
-          <div className="flex items-center justify-center space-x-4">
+          <div className="flex items-center justify-center gap-4">
             {[
-              { key: "upload", label: "Upload & Preview", icon: Upload },
-              { key: "purchase", label: "Place Order", icon: CreditCard },
+              { key: "upload", label: copy.stepUpload, icon: Upload },
+              { key: "purchase", label: copy.stepPurchase, icon: CreditCard },
             ].map((stepItem, index) => {
               const StepIcon = stepItem.icon;
               const isActive = step === stepItem.key;
@@ -603,21 +637,21 @@ function MakePhotoView() {
                       isClickable && goToStep(stepItem.key as typeof step)
                     }
                     disabled={!isClickable}
-                    className={`flex items-center space-x-2 px-6 py-3 rounded-lg font-medium transition-colors ${
+                    className={`flex items-center gap-2 rounded-lg px-6 py-3 font-medium transition-colors ${
                       isActive
                         ? "bg-emerald-600 text-white"
                         : isCompleted
                           ? "bg-green-100 text-green-700 hover:bg-green-200"
                           : isClickable
                             ? "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                            : "bg-gray-100 text-gray-400 cursor-not-allowed"
+                            : "cursor-not-allowed bg-gray-100 text-gray-400"
                     }`}
                   >
                     <StepIcon className="h-5 w-5" />
                     <span>{stepItem.label}</span>
                   </button>
                   {index < 1 && (
-                    <ArrowRight className="h-5 w-5 text-gray-400" />
+                    <ArrowRight className="h-5 w-5 text-gray-400 rtl:rotate-180" />
                   )}
                 </React.Fragment>
               );
@@ -626,11 +660,11 @@ function MakePhotoView() {
         </div>
 
         {/* Main Content */}
-        <div className="bg-white rounded-xl shadow-lg p-8">
+        <div className="rounded-xl bg-white p-8 shadow-lg">
           {step === "upload" && (
             <div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-6">
-                Upload Your Photo
+              <h2 className="mb-6 text-2xl font-bold text-gray-900">
+                {copy.uploadCta}
               </h2>
 
               {/* Photo Spec Selection */}
@@ -665,7 +699,7 @@ function MakePhotoView() {
                     <Search className="h-5 w-5 text-gray-400" />
                     <input
                       type="text"
-                      placeholder="Search for other photo types (e.g., China Visa, UK Passport)..."
+                      placeholder={copy.searchPlaceholder}
                       value={searchQuery}
                       onChange={handleSearchInputChange}
                       className="flex-1 outline-none text-gray-900 placeholder-gray-500"
@@ -733,14 +767,10 @@ function MakePhotoView() {
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:gap-5">
                   <div className="min-w-0 flex-1">
                     <h3 className="mb-2.5 text-sm font-semibold text-emerald-950 sm:text-base">
-                      Photo tips
+                      {copy.tipsTitle}
                     </h3>
                     <ul className="space-y-2">
-                      {[
-                        "Full head and shoulders in frame",
-                        "Even lighting on the face",
-                        "Simple, plain background",
-                      ].map((tip, index) => (
+                      {copy.tips.map((tip, index) => (
                         <li
                           key={tip}
                           className="flex items-start gap-2 text-sm leading-snug text-slate-700"
@@ -825,8 +855,8 @@ function MakePhotoView() {
                           )}
                           <span>
                             {showOriginal
-                              ? "Show passport photo"
-                              : "Show original photo"}
+                              ? copy.showProcessed
+                              : copy.showOriginal}
                           </span>
                         </button>
                       </div>
@@ -1070,8 +1100,8 @@ function MakePhotoView() {
                     )}
                     <span>
                       {showOriginal
-                        ? "Show passport photo"
-                        : "Show original photo"}
+                        ? copy.showProcessed
+                        : copy.showOriginal}
                     </span>
                   </button>
                 </div>

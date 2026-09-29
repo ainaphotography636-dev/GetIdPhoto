@@ -2,13 +2,21 @@
 
 import { useId, useState } from "react";
 import { ChevronDown, HelpCircle } from "lucide-react";
-import { FAQ_ITEMS, type FaqItem } from "@/data/faq";
+import type { FaqItem } from "@/i18n/types";
 
 type FaqSectionProps = {
-  items?: FaqItem[];
+  items: FaqItem[];
+  eyebrow: string;
+  title: string;
+  subtitle: string;
 };
 
-export default function FaqSection({ items = FAQ_ITEMS }: FaqSectionProps) {
+export default function FaqSection({
+  items,
+  eyebrow,
+  title,
+  subtitle,
+}: FaqSectionProps) {
   const baseId = useId();
   const [openId, setOpenId] = useState<string | null>(items[0]?.id ?? null);
 
@@ -26,19 +34,18 @@ export default function FaqSection({ items = FAQ_ITEMS }: FaqSectionProps) {
 
       <div className="relative mx-auto max-w-3xl px-4 sm:px-6 lg:px-8">
         <div className="mb-10 text-center sm:mb-12">
-          <p className="mb-2 inline-flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-primary">
+          <p className="mb-2 inline-flex items-center justify-center gap-2 text-sm font-semibold tracking-wide text-primary">
             <HelpCircle className="h-4 w-4" aria-hidden />
-            FAQ · UAE &amp; GCC
+            {eyebrow}
           </p>
           <h2
             id={`${baseId}-heading`}
             className="font-display mb-3 text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl"
           >
-            Passport &amp; ID Photo Questions
+            {title}
           </h2>
           <p className="mx-auto max-w-xl text-base leading-relaxed text-slate-600 sm:text-lg">
-            Clear answers for Dubai, Abu Dhabi, Sharjah, and GCC expats needing
-            ICP-, GDRFA-, and visa-ready photos online.
+            {subtitle}
           </p>
         </div>
 
@@ -68,7 +75,7 @@ export default function FaqSection({ items = FAQ_ITEMS }: FaqSectionProps) {
                         current === item.id ? null : item.id,
                       )
                     }
-                    className="flex w-full items-start gap-3 px-4 py-4 text-left sm:gap-4 sm:px-5 sm:py-5"
+                    className="flex w-full items-start gap-3 px-4 py-4 text-start sm:gap-4 sm:px-5 sm:py-5"
                   >
                     <span className="min-w-0 flex-1 leading-snug text-balance">
                       {item.question}

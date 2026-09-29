@@ -1,3 +1,6 @@
+import type { Metadata } from "next";
+import type { Locale } from "@/i18n/config";
+
 /** Canonical site origin for SEO, sitemap, and structured data. */
 export const SITE_URL = "https://www.getidphotoai.ae";
 
@@ -28,6 +31,10 @@ export const SEO_KEYWORDS = [
 
 export const OG_IMAGE_PATH = "/hero-uae.jpg";
 
+/** Localized homepage paths (English is the unprefixed root). */
+export const EN_HOME_PATH = "/";
+export const AR_HOME_PATH = "/ar";
+
 export const GEO = {
   region: "AE",
   placename: "Dubai, United Arab Emirates",
@@ -52,3 +59,49 @@ export const SERVICE_AREAS = [
   "Bahrain",
   "Kuwait",
 ] as const;
+
+/** Absolute URL for a site path (always under SITE_URL). */
+export function absoluteUrl(path: string = "/"): string {
+  const base = SITE_URL.replace(/\/$/, "");
+  if (!path || path === "/") {
+    return `${base}/`;
+  }
+  return `${base}${path.startsWith("/") ? path : `/${path}`}`;
+}
+
+export function homePathForLocale(locale: Locale): string {
+  return locale === "ar" ? AR_HOME_PATH : EN_HOME_PATH;
+}
+
+export function homeUrlForLocale(locale: Locale): string {
+  return absoluteUrl(homePathForLocale(locale));
+}
+
+/**
+ * UAE-targeted hreflang map for bilingual homepage variants.
+ * Absolute URLs are preferred by Google Search Console / Bing.
+ */
+export function hreflangLanguageMap(): NonNullable<
+  NonNullable<Metadata["alternates"]>["languages"]
+> {
+  const enUrl = homeUrlForLocale("en");
+  const arUrl = homeUrlForLocale("ar");
+
+  return {
+    "en-AE": enUrl,
+    "ar-AE": arUrl,
+    en: enUrl,
+    ar: arUrl,
+    "x-default": enUrl,
+  };
+}
+
+/**
+ * Canonical + hreflang alternates for the active homepage locale.
+ */
+export function buildHomeAlternates(locale: Locale): Metadata["alternates"] {
+  return {
+    canonical: homeUrlForLocale(locale),
+    languages: hreflangLanguageMap(),
+  };
+}

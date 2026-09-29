@@ -2,26 +2,62 @@ import type { JSX } from "react";
 import type { ProductPackage } from "../models/ProductPackage";
 import { CheckCircle, LoaderCircle, Sparkles } from "lucide-react";
 import { formatPrice } from "../utils/formatPrice";
+import type { Dictionary } from "@/i18n/dictionaries/en";
+import type { Locale } from "@/i18n/config";
 
 interface Props {
   pkg: ProductPackage;
   onBuyClick: (pkg: ProductPackage) => void | Promise<void>;
   isSelected?: boolean;
   isLoading?: boolean;
+  locale: Locale;
+  /** Used for Arabic (and UI chrome). English package body stays on `pkg`. */
+  pricingCopy: Dictionary["pricing"];
 }
 
 export default function ProductPackageCard(props: Props): JSX.Element {
-  const { pkg, onBuyClick, isLoading } = props;
+  const { pkg, onBuyClick, isLoading, locale, pricingCopy } = props;
   const isFeatured = Boolean(pkg.isPopular);
+  const useArabicCopy = locale === "ar";
+  const localized =
+    pkg.id === "standard"
+      ? pricingCopy.packages.standard
+      : pricingCopy.packages.basic;
 
   const formattedPrice = formatPrice(pkg.priceCents, pkg.currency);
 
+  const name = useArabicCopy ? localized.name : pkg.name;
+  const notice = useArabicCopy ? localized.notice : pkg.notice;
   const descriptions = [
-    ...pkg.description,
+    ...(useArabicCopy ? localized.features : pkg.description),
     pkg.printedPhotoNumber === 0
       ? undefined
-      : `${pkg.printedPhotoNumber} printed photos (pick up)`,
+      : useArabicCopy
+        ? pricingCopy.printedPhotos.replace(
+            "{count}",
+            String(pkg.printedPhotoNumber),
+          )
+        : `${pkg.printedPhotoNumber} printed photos (pick up)`,
   ].filter((it): it is string => it !== undefined);
+
+  const badge = useArabicCopy
+    ? isFeatured
+      ? pricingCopy.recommended
+      : pricingCopy.digitalDownload
+    : isFeatured
+      ? "Recommended"
+      : "Digital download";
+
+  const mostPopular = useArabicCopy ? pricingCopy.mostPopular : "Most popular";
+  const oneTime = useArabicCopy
+    ? pricingCopy.oneTime
+    : "One-time payment · AED";
+  const continueUpload = useArabicCopy
+    ? pricingCopy.continueUpload
+    : "Continue — Upload photo";
+  const redirecting = useArabicCopy
+    ? pricingCopy.redirecting
+    : "Redirecting to Stripe…";
 
   return (
     <div
@@ -42,16 +78,16 @@ export default function ProductPackageCard(props: Props): JSX.Element {
               isFeatured ? "text-primary" : "text-emerald-700/80"
             }`}
           >
-            {isFeatured ? "Recommended" : "Digital download"}
+            {badge}
           </p>
           <h3 className="mt-1 text-xl font-bold leading-snug text-slate-900 sm:text-2xl">
-            {pkg.name}
+            {name}
           </h3>
         </div>
         {isFeatured ? (
           <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-primary px-2.5 py-1 text-xs font-semibold text-white">
             <Sparkles className="h-3.5 w-3.5" aria-hidden />
-            Most popular
+            {mostPopular}
           </span>
         ) : null}
       </div>
@@ -62,7 +98,7 @@ export default function ProductPackageCard(props: Props): JSX.Element {
             {formattedPrice}
           </span>
         </p>
-        <p className="mt-1 text-sm text-slate-500">One-time payment · AED</p>
+        <p className="mt-1 text-sm text-slate-500">{oneTime}</p>
       </div>
 
       <ul className="mb-6 flex-1 space-y-3">
@@ -81,9 +117,9 @@ export default function ProductPackageCard(props: Props): JSX.Element {
         ))}
       </ul>
 
-      {pkg.notice ? (
+      {notice ? (
         <p className="mb-6 rounded-xl border border-emerald-200 bg-emerald-50/80 px-3.5 py-3 text-sm leading-relaxed text-emerald-950">
-          {pkg.notice}
+          {notice}
         </p>
       ) : (
         <div className="mb-6 hidden md:block md:min-h-[1px]" aria-hidden />
@@ -102,10 +138,10 @@ export default function ProductPackageCard(props: Props): JSX.Element {
         {isLoading ? (
           <>
             <LoaderCircle className="h-5 w-5 animate-spin" />
-            Redirecting to Stripe…
+            {redirecting}
           </>
         ) : (
-          `Continue — Upload photo`
+          continueUpload
         )}
       </button>
     </div>

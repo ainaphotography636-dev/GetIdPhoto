@@ -25,74 +25,55 @@ import ProductPackageCard from "../components/ProductPackageCard";
 import PhotoGuidelines from "../components/PhotoGuidelines";
 import BrandLogo from "../components/BrandLogo";
 import FaqSection from "../components/FaqSection";
+import LanguageSwitcher from "../components/LanguageSwitcher";
 import { useRef, useState, type ReactNode } from "react";
 import NavItem from "../lib/nav-item";
 import type { ProductPackage } from "../models/ProductPackage";
 import { formatPrice } from "../utils/formatPrice";
+import type { Locale } from "@/i18n/config";
+import type { Dictionary } from "@/i18n/dictionaries/en";
 
-const testimonials = [
-  {
-    name: "Sara Al Mansoori",
-    location: "Dubai",
-    quote:
-      "Got my Emirates ID photo ready in under a minute. Accepted on the first try at the typing centre—no mall trip needed.",
-  },
-  {
-    name: "James Okonkwo",
-    location: "Abu Dhabi",
-    quote:
-      "Used Human Verified for my residency visa. The reviewer caught a lighting issue and fixed it before I submitted to GDRFA.",
-  },
-  {
-    name: "Fatima Rahman",
-    location: "Sharjah",
-    quote:
-      "Clear pricing, instant download, and the print sheet worked perfectly at home. GetIDPhotoAI.ae saved me a whole afternoon.",
-  },
-];
+type HomeViewProps = {
+  locale: Locale;
+  dictionary: Dictionary;
+};
 
-const photoRequirements: {
-  id: SpecCode;
-  title: string;
-  description: string;
-  detail: string;
-  icon: ReactNode;
-}[] = [
-  {
-    id: "uae-passport",
-    title: "UAE Passport Photo",
-    description: "Standard biometric dimensions",
-    detail: "Official UAE passport photo sizing and biometric framing",
-    icon: <Camera className="h-6 w-6" />,
-  },
-  {
-    id: "uae-id-card",
-    title: "UAE ID Card Photo",
-    description: "ICP specifications",
-    detail: "Meets ICP Smart Services Emirates ID photo requirements",
-    icon: <CreditCard className="h-6 w-6" />,
-  },
-  {
-    id: "dubai-visa",
-    title: "UAE VISA Photo",
-    description: "GDRFA dimensions & white background",
-    detail: "GDRFA-compliant sizing with required white background",
-    icon: <Plane className="h-6 w-6" />,
-  },
-  {
-    id: "40x60-mm",
-    title: "40x60 mm Photo",
-    description: "40×60 mm format",
-    detail: "Common international 40×60 mm photo format",
-    icon: <Ruler className="h-6 w-6" />,
-  },
-];
+const photoRequirementIds = [
+  "uae-passport",
+  "uae-id-card",
+  "dubai-visa",
+  "40x60-mm",
+] as const;
 
-function HomeView() {
+const photoRequirementIcons: Record<
+  (typeof photoRequirementIds)[number],
+  ReactNode
+> = {
+  "uae-passport": <Camera className="h-6 w-6" />,
+  "uae-id-card": <CreditCard className="h-6 w-6" />,
+  "dubai-visa": <Plane className="h-6 w-6" />,
+  "40x60-mm": <Ruler className="h-6 w-6" />,
+};
+
+const whyUsIcons = {
+  guarantee: <Shield className="h-12 w-12" />,
+  fast: <Zap className="h-12 w-12" />,
+  compliant: <Award className="h-12 w-12" />,
+  experts: <Users className="h-12 w-12" />,
+} as const;
+
+function HomeView({ locale, dictionary }: HomeViewProps) {
   const router = useRouter();
+  const t = dictionary;
   const [selectedRequirement, setSelectedRequirement] = useState<SpecCode>(
-    photoRequirements[0].id,
+    photoRequirementIds[0],
   );
+
+  const photoRequirements = photoRequirementIds.map((id) => ({
+    id: id as SpecCode,
+    ...t.services.requirements[id],
+    icon: photoRequirementIcons[id],
+  }));
 
   const servicesSectionRef = useRef<HTMLDivElement | null>(null);
   const pricingSectionRef = useRef<HTMLDivElement | null>(null);
@@ -102,31 +83,31 @@ function HomeView() {
 
   const navItems = [
     {
-      label: "Services",
+      label: t.nav.services,
       handler: () => {
         servicesSectionRef.current?.scrollIntoView({ behavior: "smooth" });
       },
     },
     {
-      label: "Pricing",
+      label: t.nav.pricing,
       handler: () => {
         pricingSectionRef.current?.scrollIntoView({ behavior: "smooth" });
       },
     },
     {
-      label: "Testimonials",
+      label: t.nav.testimonials,
       handler: () => {
         testimonialsSectionRef.current?.scrollIntoView({ behavior: "smooth" });
       },
     },
     {
-      label: "FAQ",
+      label: t.nav.faq,
       handler: () => {
         faqSectionRef.current?.scrollIntoView({ behavior: "smooth" });
       },
     },
     {
-      label: "Contact",
+      label: t.nav.contact,
       handler: () => {
         contactSectionRef.current?.scrollIntoView({ behavior: "smooth" });
       },
@@ -145,7 +126,6 @@ function HomeView() {
   );
 
   const handlePricingCheckout = (pkg: ProductPackage) => {
-    // Always start with photo upload/processing; payment comes after.
     const params = new URLSearchParams({
       pkgId: pkg.id,
       specCode: selectedRequirement,
@@ -153,18 +133,24 @@ function HomeView() {
     router.push(`/make-photo?${params.toString()}`);
   };
 
+  const homeHref = locale === "ar" ? "/ar" : "/";
+  const phone = constants.businessLocations[0]?.phone || "+971559461415";
+  const whatsapp =
+    constants.businessLocations[0]?.whatsapp || "971559461415";
+  const email = constants.businessLocations[0]?.email;
+
   return (
     <div className="min-h-screen bg-white">
       {/* Header */}
-      <header className="fixed top-0 w-full bg-white/95 backdrop-blur-sm border-b border-gray-200 z-50 shadow-sm">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-24">
+      <header className="fixed top-0 z-50 w-full border-b border-gray-200 bg-white/95 shadow-sm backdrop-blur-sm">
+        <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+          <div className="flex h-24 items-center justify-between gap-3">
             <BrandLogo height={68} />
-            <nav className="hidden md:flex space-x-8">
+            <nav className="hidden items-center gap-6 md:flex lg:gap-8">
               {navItems.map((it, index) => (
                 <button
                   key={index}
-                  className="text-gray-600 hover:text-emerald-600 font-medium transition-colors"
+                  className="font-medium text-gray-600 transition-colors hover:text-emerald-600"
                   onClick={() => {
                     it.handler();
                   }}
@@ -174,68 +160,72 @@ function HomeView() {
               ))}
             </nav>
 
-            <NavItem href="/make-photo">
-              <button className="bg-primary text-white px-6 py-2 rounded-lg font-semibold hover:bg-primary-hover transition-colors hidden md:block">
-                Upload Your Photo
+            <div className="flex items-center gap-2 sm:gap-3">
+              <LanguageSwitcher
+                locale={locale}
+                switchLabel={t.language.switchTo}
+                ariaLabel={t.language.label}
+              />
+              <NavItem href="/make-photo" className="hidden md:block">
+                <button className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-primary-hover lg:px-6">
+                  {t.nav.uploadCta}
+                </button>
+              </NavItem>
+              <button type="button" className="md:hidden" aria-label="Menu">
+                <div className="flex h-5 w-6 flex-col justify-between">
+                  <span className="h-0.5 w-full bg-gray-700"></span>
+                  <span className="h-0.5 w-full bg-gray-700"></span>
+                  <span className="h-0.5 w-full bg-gray-700"></span>
+                </div>
               </button>
-            </NavItem>
-
-            <button className="md:hidden">
-              <div className="w-6 h-5 flex flex-col justify-between">
-                <span className="w-full h-0.5 bg-gray-700"></span>
-                <span className="w-full h-0.5 bg-gray-700"></span>
-                <span className="w-full h-0.5 bg-gray-700"></span>
-              </div>
-            </button>
+            </div>
           </div>
         </div>
       </header>
 
       {/* Hero Section */}
-      <section className="pt-24 bg-gradient-to-br from-emerald-800 via-emerald-900 to-neutral-950 text-white">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
-            <div className="flex flex-col items-start text-left">
+      <section className="bg-gradient-to-br from-emerald-800 via-emerald-900 to-neutral-950 pt-24 text-white">
+        <div className="mx-auto max-w-6xl px-4 py-20 sm:px-6 lg:px-8">
+          <div className="grid items-center gap-12 lg:grid-cols-2">
+            <div className="flex flex-col items-start text-start">
               <div className="mb-4 flex items-center gap-2">
                 <div className="flex">
                   {[...Array(5)].map((_, i) => (
                     <Star
                       key={i}
-                      className="h-5 w-5 text-yellow-400 fill-current"
+                      className="h-5 w-5 fill-current text-yellow-400"
                     />
                   ))}
                 </div>
-                <span className="text-emerald-100">
-                  Rated 4.9/5 by 2,500+ customers
-                </span>
+                <span className="text-emerald-100">{t.hero.rating}</span>
               </div>
               <p className="mb-3 text-lg font-semibold tracking-wide text-emerald-200">
                 {constants.studioName || "GetIDPhotoAI"}
               </p>
               <h1 className="font-display mb-6 max-w-xl text-4xl font-bold leading-[1.15] tracking-tight text-white md:text-5xl lg:text-[3.25rem]">
-                UAE Passport, Visa &amp; Emirates ID
-                <span className="block">Photo Maker</span>
+                {t.hero.headline}
+                <span className="block">{t.hero.headlineAccent}</span>
               </h1>
               <p className="mb-6 max-w-xl text-lg leading-relaxed text-emerald-50 md:text-xl">
-                Get government-compliant biometric photos for your UAE documents
-                in seconds. Skip the studio—our AI automatically adjusts your
-                photo to exact UAE specifications with a clean white background.
+                {t.hero.subhead}
               </p>
 
               {/* Hero pricing badge — ticket-style dual cards */}
               <div
                 className="mb-6 grid w-full max-w-xl grid-cols-1 gap-2.5 sm:grid-cols-[1fr_auto_1fr] sm:items-center"
-                aria-label="Service pricing"
+                aria-label={t.hero.pricingAria}
               >
                 <div className="relative overflow-hidden rounded-xl border border-emerald-200/80 bg-white shadow-md">
                   <div
-                    className="absolute inset-y-0 left-0 w-1 bg-emerald-500"
+                    className="absolute inset-y-0 start-0 w-1 bg-emerald-500"
                     aria-hidden
                   />
-                  <div className="flex items-center justify-between gap-3 py-3 pl-4 pr-3">
+                  <div className="flex items-center justify-between gap-3 py-3 ps-4 pe-3">
                     <div className="min-w-0">
                       <p className="truncate text-xs font-medium text-slate-500">
-                        {standardDigitalPkg?.name || "Standard Digital"}
+                        {locale === "ar"
+                          ? t.hero.standardLabel
+                          : standardDigitalPkg?.name || "Standard Digital"}
                       </p>
                       <p className="mt-0.5 font-display text-2xl font-bold tracking-tight text-emerald-800">
                         {standardDigitalPkg
@@ -247,20 +237,22 @@ function HomeView() {
                       </p>
                     </div>
                     <span className="rounded-md bg-emerald-50 px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-emerald-700">
-                      Instant
+                      {t.hero.instantBadge}
                     </span>
                   </div>
                 </div>
 
                 <span className="hidden text-center text-xs font-semibold uppercase tracking-widest text-emerald-100/80 sm:block">
-                  or
+                  {t.hero.or}
                 </span>
 
                 <div className="relative overflow-hidden rounded-xl border border-white/40 bg-gradient-to-br from-emerald-700 to-emerald-900 shadow-md shadow-emerald-950/30">
-                  <div className="flex items-center justify-between gap-3 px-3 py-3 pl-4">
+                  <div className="flex items-center justify-between gap-3 px-3 py-3 ps-4">
                     <div className="min-w-0">
                       <p className="truncate text-xs font-medium text-emerald-100/90">
-                        {humanVerifiedPkg?.name || "Human Verified"}
+                        {locale === "ar"
+                          ? t.hero.humanLabel
+                          : humanVerifiedPkg?.name || "Human Verified"}
                       </p>
                       <p className="mt-0.5 font-display text-2xl font-bold tracking-tight text-white">
                         {humanVerifiedPkg
@@ -272,7 +264,7 @@ function HomeView() {
                       </p>
                     </div>
                     <span className="rounded-md bg-white px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-emerald-800">
-                      Best
+                      {t.hero.bestBadge}
                     </span>
                   </div>
                 </div>
@@ -281,35 +273,35 @@ function HomeView() {
               <div className="mb-8 flex w-full max-w-xl flex-col gap-3 sm:flex-row sm:items-stretch">
                 <NavItem
                   href="/make-photo"
-                  className="inline-flex flex-1 items-center justify-center whitespace-nowrap rounded-lg bg-white px-6 py-4 text-center text-base font-bold text-primary shadow-lg transition-all duration-200 hover:bg-emerald-50 hover:scale-[1.02] sm:text-lg"
+                  className="inline-flex flex-1 items-center justify-center whitespace-nowrap rounded-lg bg-white px-6 py-4 text-center text-base font-bold text-primary shadow-lg transition-all duration-200 hover:scale-[1.02] hover:bg-emerald-50 sm:text-lg"
                 >
-                  Upload Your Photo
+                  {t.hero.uploadCta}
                 </NavItem>
                 <NavItem
                   href="/make-photo"
                   className="inline-flex flex-1 items-center justify-center gap-2 whitespace-nowrap rounded-lg border-2 border-white px-6 py-4 text-center text-base font-bold text-white transition-all duration-200 hover:bg-white hover:text-primary sm:text-lg"
                 >
                   <ShieldCheck className="h-5 w-5 shrink-0" />
-                  Human Verification
+                  {t.hero.humanCta}
                 </NavItem>
               </div>
               <div className="flex w-full max-w-xl flex-wrap gap-2">
                 <div className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-2">
                   <BadgeCheck className="h-4 w-4 shrink-0 text-emerald-200" />
-                  <span className="text-sm whitespace-nowrap text-emerald-50">
-                    ICP Smart Services Compliant
+                  <span className="whitespace-nowrap text-sm text-emerald-50">
+                    {t.hero.badgeIcp}
                   </span>
                 </div>
                 <div className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-2">
                   <FileCheck2 className="h-4 w-4 shrink-0 text-emerald-200" />
-                  <span className="text-sm whitespace-nowrap text-emerald-50">
-                    GDRFA Approved Formats
+                  <span className="whitespace-nowrap text-sm text-emerald-50">
+                    {t.hero.badgeGdrfa}
                   </span>
                 </div>
                 <div className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-2">
                   <Send className="h-4 w-4 shrink-0 text-emerald-200" />
-                  <span className="text-sm whitespace-nowrap text-emerald-50">
-                    Instant Digital Delivery
+                  <span className="whitespace-nowrap text-sm text-emerald-50">
+                    {t.hero.badgeInstant}
                   </span>
                 </div>
               </div>
@@ -328,11 +320,9 @@ function HomeView() {
                 </div>
                 <div className="text-center">
                   <p className="font-semibold text-gray-600">
-                    Government Compliant
+                    {t.hero.cardTitle}
                   </p>
-                  <p className="text-sm text-gray-500">
-                    Meets all official requirements
-                  </p>
+                  <p className="text-sm text-gray-500">{t.hero.cardSubtitle}</p>
                 </div>
               </div>
             </div>
@@ -341,23 +331,21 @@ function HomeView() {
       </section>
 
       {/* Requirement Selector Section */}
-      <section ref={servicesSectionRef} className="py-20 bg-emerald-50">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-              Choose Your Official Requirement
+      <section ref={servicesSectionRef} className="bg-emerald-50 py-20">
+        <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
+          <div className="mb-12 text-center">
+            <h2 className="mb-4 text-3xl font-bold text-gray-900 md:text-4xl">
+              {t.services.title}
             </h2>
-            <p className="text-xl text-gray-600">
-              Select the exact document type before uploading your photo
-            </p>
+            <p className="text-xl text-gray-600">{t.services.subtitle}</p>
           </div>
 
           <div className="mb-6">
             <label
               htmlFor="photo-requirement"
-              className="block text-sm font-semibold text-gray-700 mb-2"
+              className="mb-2 block text-sm font-semibold text-gray-700"
             >
-              Document type
+              {t.services.documentType}
             </label>
             <select
               id="photo-requirement"
@@ -375,7 +363,7 @@ function HomeView() {
             </select>
           </div>
 
-          <div className="grid sm:grid-cols-2 gap-4 mb-8">
+          <div className="mb-8 grid gap-4 sm:grid-cols-2">
             {photoRequirements.map((item) => {
               const isSelected = selectedRequirement === item.id;
               return (
@@ -383,7 +371,7 @@ function HomeView() {
                   key={item.id}
                   type="button"
                   onClick={() => setSelectedRequirement(item.id)}
-                  className={`flex h-full min-w-0 flex-col text-left rounded-xl border-2 p-5 transition-all duration-200 ${
+                  className={`flex h-full min-w-0 flex-col rounded-xl border-2 p-5 text-start transition-all duration-200 ${
                     isSelected
                       ? "border-emerald-600 bg-white shadow-md ring-2 ring-emerald-600/20"
                       : "border-transparent bg-white/80 hover:border-emerald-200 hover:shadow-sm"
@@ -421,9 +409,9 @@ function HomeView() {
             })}
           </div>
 
-          <div className="rounded-xl bg-white border border-emerald-100 p-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div className="flex flex-col gap-4 rounded-xl border border-emerald-100 bg-white p-5 sm:flex-row sm:items-center sm:justify-between">
             <div className="min-w-0">
-              <p className="text-sm text-gray-500">Selected requirement</p>
+              <p className="text-sm text-gray-500">{t.services.selected}</p>
               <p className="text-lg font-semibold leading-snug text-balance text-gray-900">
                 {selectedRequirementMeta?.title}
               </p>
@@ -436,61 +424,36 @@ function HomeView() {
               onClick={() =>
                 router.push(`/make-photo?specCode=${selectedRequirement}`)
               }
-              className="inline-flex items-center justify-center gap-2 bg-emerald-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-emerald-700 transition-colors"
+              className="inline-flex items-center justify-center gap-2 rounded-lg bg-emerald-600 px-6 py-3 font-semibold text-white transition-colors hover:bg-emerald-700"
             >
-              Continue to Upload
-              <ArrowRight className="h-5 w-5" />
+              {t.services.continueCta}
+              <ArrowRight className="h-5 w-5 rtl:rotate-180" />
             </button>
           </div>
         </div>
       </section>
 
-      <PhotoGuidelines />
+      <PhotoGuidelines copy={t.guidelines} />
 
       {/* Why Choose Us Section */}
-      <section className="py-20 bg-white">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-              Why Choose {constants.studioName}?
+      <section className="bg-white py-20">
+        <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+          <div className="mb-16 text-center">
+            <h2 className="mb-4 text-3xl font-bold text-gray-900 md:text-4xl">
+              {t.whyUs.title}
             </h2>
-            <p className="text-xl text-gray-600">
-              Professional service you can trust
-            </p>
+            <p className="text-xl text-gray-600">{t.whyUs.subtitle}</p>
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-            {[
-              {
-                icon: <Shield className="h-12 w-12" />,
-                title: "100% Guarantee",
-                description:
-                  "If your photos are rejected, we'll retake them for free or refund your money",
-              },
-              {
-                icon: <Zap className="h-12 w-12" />,
-                title: "10-Minute Service",
-                description:
-                  "Walk in and walk out with professional photos in just 10 minutes",
-              },
-              {
-                icon: <Award className="h-12 w-12" />,
-                title: "Government Compliant",
-                description:
-                  "All photos meet strict government standards and requirements",
-              },
-              {
-                icon: <Users className="h-12 w-12" />,
-                title: "Expert Staff",
-                description:
-                  "Trained professionals with years of experience in official photography",
-              },
-            ].map((feature, index) => (
-              <div key={index} className="text-center">
-                <div className="bg-emerald-100 rounded-full w-20 h-20 flex items-center justify-center mx-auto mb-4">
-                  <div className="text-emerald-600">{feature.icon}</div>
+          <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-4">
+            {t.whyUs.items.map((feature) => (
+              <div key={feature.id} className="text-center">
+                <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-emerald-100">
+                  <div className="text-emerald-600">
+                    {whyUsIcons[feature.id as keyof typeof whyUsIcons]}
+                  </div>
                 </div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                <h3 className="mb-2 text-xl font-semibold text-gray-900">
                   {feature.title}
                 </h3>
                 <p className="text-gray-600">{feature.description}</p>
@@ -513,13 +476,13 @@ function HomeView() {
         <div className="relative mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
           <div className="mb-14 text-center">
             <p className="mb-2 text-sm font-semibold uppercase tracking-wide text-primary">
-              Pricing
+              {t.pricing.eyebrow}
             </p>
             <h2 className="font-display mb-4 text-3xl font-bold text-gray-900 md:text-4xl">
-              Simple, Transparent Pricing
+              {t.pricing.title}
             </h2>
             <p className="mx-auto max-w-xl text-lg text-gray-600 md:text-xl">
-              No hidden fees, no surprises. Instant download after payment.
+              {t.pricing.subtitle}
             </p>
           </div>
 
@@ -529,43 +492,42 @@ function HomeView() {
                 key={pkg.id}
                 pkg={pkg}
                 onBuyClick={handlePricingCheckout}
+                locale={locale}
+                pricingCopy={t.pricing}
               />
             ))}
           </div>
           <p className="mt-6 text-center text-sm text-slate-600">
-            You&apos;ll upload and process your photo first. Payment appears only
-            after your ID photo is ready.
+            {t.pricing.note}
           </p>
         </div>
       </section>
 
       {/* Testimonials Section */}
-      <section ref={testimonialsSectionRef} className="py-20 bg-white">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="font-display text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-              Trusted Across the UAE
+      <section ref={testimonialsSectionRef} className="bg-white py-20">
+        <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+          <div className="mb-12 text-center">
+            <h2 className="font-display mb-4 text-3xl font-bold text-gray-900 md:text-4xl">
+              {t.testimonials.title}
             </h2>
-            <p className="text-xl text-gray-600">
-              Real customers. Real ICP &amp; GDRFA-ready photos.
-            </p>
+            <p className="text-xl text-gray-600">{t.testimonials.subtitle}</p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-6">
-            {testimonials.map((item) => (
+          <div className="grid gap-6 md:grid-cols-3">
+            {t.testimonials.items.map((item) => (
               <blockquote
                 key={item.name}
-                className="rounded-2xl border border-emerald-100 bg-emerald-50/50 p-6 flex flex-col"
+                className="flex flex-col rounded-2xl border border-emerald-100 bg-emerald-50/50 p-6"
               >
-                <div className="flex mb-4">
+                <div className="mb-4 flex">
                   {[...Array(5)].map((_, i) => (
                     <Star
                       key={i}
-                      className="h-4 w-4 text-amber-400 fill-current"
+                      className="h-4 w-4 fill-current text-amber-400"
                     />
                   ))}
                 </div>
-                <p className="text-slate-800 leading-relaxed flex-1 mb-6">
+                <p className="mb-6 flex-1 leading-relaxed text-slate-800">
                   “{item.quote}”
                 </p>
                 <footer>
@@ -579,53 +541,55 @@ function HomeView() {
       </section>
 
       <div ref={faqSectionRef}>
-        <FaqSection />
+        <FaqSection
+          items={t.faq.items}
+          eyebrow={t.faq.eyebrow}
+          title={t.faq.title}
+          subtitle={t.faq.subtitle}
+        />
       </div>
 
       {/* CTA Section */}
-      <section className="py-20 bg-gradient-to-r from-emerald-800 via-emerald-900 to-neutral-950 text-white">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="font-display text-3xl md:text-4xl font-bold mb-4 text-white">
-            Ready to Get Your Photos?
+      <section className="bg-gradient-to-r from-emerald-800 via-emerald-900 to-neutral-950 py-20 text-white">
+        <div className="mx-auto max-w-4xl px-4 text-center sm:px-6 lg:px-8">
+          <h2 className="font-display mb-4 text-3xl font-bold text-white md:text-4xl">
+            {t.cta.title}
           </h2>
-          <p className="text-xl text-emerald-50 mb-8">
-            Skip the mall. Get ICP and GDRFA-compliant digital photos online at
-            GetIDPhotoAI.ae.
-          </p>
+          <p className="mb-8 text-xl text-emerald-50">{t.cta.subtitle}</p>
 
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          <div className="flex flex-col justify-center gap-4 sm:flex-row">
             <NavItem
               href="/make-photo"
-              className="bg-white text-emerald-800 px-8 py-4 rounded-lg font-bold text-lg hover:bg-emerald-50 transition-colors text-center"
+              className="rounded-lg bg-white px-8 py-4 text-center text-lg font-bold text-emerald-800 transition-colors hover:bg-emerald-50"
             >
-              Create Photos Online
+              {t.cta.createOnline}
             </NavItem>
             <NavItem
               href="/make-photo"
-              className="border-2 border-white text-white px-8 py-4 rounded-lg font-bold text-lg hover:bg-white hover:text-emerald-800 transition-colors text-center inline-flex items-center justify-center gap-2"
+              className="inline-flex items-center justify-center gap-2 rounded-lg border-2 border-white px-8 py-4 text-center text-lg font-bold text-white transition-colors hover:bg-white hover:text-emerald-800"
             >
               <ShieldCheck className="h-5 w-5" />
-              Human Verification
+              {t.cta.humanVerify}
             </NavItem>
           </div>
 
           <div className="mt-8 text-emerald-50">
             <p>
-              Questions? Email{" "}
+              {t.cta.questionsPrefix} {t.cta.emailLabel}{" "}
               <a
-                href={`mailto:${constants.businessLocations[0]?.email}`}
+                href={`mailto:${email}`}
                 className="font-semibold text-white underline underline-offset-2"
               >
-                {constants.businessLocations[0]?.email}
+                {email}
               </a>{" "}
-              · WhatsApp{" "}
+              · {t.cta.whatsappLabel}{" "}
               <a
-                href={`https://wa.me/${(constants.businessLocations[0]?.whatsapp || "971559461415").replace(/\D/g, "")}`}
+                href={`https://wa.me/${whatsapp.replace(/\D/g, "")}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="font-semibold text-white underline underline-offset-2"
               >
-                {constants.businessLocations[0]?.phone || "+971559461415"}
+                {phone}
               </a>
             </p>
           </div>
@@ -633,123 +597,114 @@ function HomeView() {
       </section>
 
       {/* Footer */}
-      <footer ref={contactSectionRef} className="bg-gray-900 text-white py-12">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid md:grid-cols-4 gap-8">
+      <footer ref={contactSectionRef} className="bg-gray-900 py-12 text-white">
+        <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+          <div className="grid gap-8 md:grid-cols-4">
             <div className="md:col-span-2">
               <div className="mb-4">
                 <BrandLogo height={64} variant="light" />
               </div>
-              <p className="text-gray-400 leading-relaxed mb-4">
-                UAE passport, visa, and Emirates ID photos online — ICP and
-                GDRFA compliant. Instant digital delivery at GetIDPhotoAI.ae.
-              </p>
-              <div className="flex space-x-4">
+              <p className="mb-4 leading-relaxed text-gray-400">{t.footer.blurb}</p>
+              <div className="flex gap-4">
                 <div className="flex">
                   {[...Array(5)].map((_, i) => (
                     <Star
                       key={i}
-                      className="h-4 w-4 text-yellow-400 fill-current"
+                      className="h-4 w-4 fill-current text-yellow-400"
                     />
                   ))}
                 </div>
-                <span className="text-gray-400 text-sm">
-                  4.9/5 from 2,500+ reviews
-                </span>
+                <span className="text-sm text-gray-400">{t.footer.reviews}</span>
               </div>
             </div>
 
             <div>
-              <h4 className="font-semibold mb-4">Services</h4>
+              <h4 className="mb-4 font-semibold">{t.footer.servicesTitle}</h4>
               <ul className="space-y-2 text-gray-400">
-                <li>
-                  <a href="#services" className="hover:text-white transition-colors" onClick={(e) => { e.preventDefault(); servicesSectionRef.current?.scrollIntoView({ behavior: "smooth" }); }}>
-                    UAE Passport Photo
-                  </a>
-                </li>
-                <li>
-                  <a href="#services" className="hover:text-white transition-colors" onClick={(e) => { e.preventDefault(); servicesSectionRef.current?.scrollIntoView({ behavior: "smooth" }); }}>
-                    UAE ID Card Photo
-                  </a>
-                </li>
-                <li>
-                  <a href="#services" className="hover:text-white transition-colors" onClick={(e) => { e.preventDefault(); servicesSectionRef.current?.scrollIntoView({ behavior: "smooth" }); }}>
-                    UAE VISA Photo
-                  </a>
-                </li>
-                <li>
-                  <a href="#services" className="hover:text-white transition-colors" onClick={(e) => { e.preventDefault(); servicesSectionRef.current?.scrollIntoView({ behavior: "smooth" }); }}>
-                    40x60 mm Photo
-                  </a>
-                </li>
+                {photoRequirements.map((item) => (
+                  <li key={item.id}>
+                    <a
+                      href="#services"
+                      className="transition-colors hover:text-white"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        servicesSectionRef.current?.scrollIntoView({
+                          behavior: "smooth",
+                        });
+                      }}
+                    >
+                      {item.title}
+                    </a>
+                  </li>
+                ))}
               </ul>
             </div>
 
             <div>
-              <h4 className="font-semibold mb-4">Contact Info</h4>
+              <h4 className="mb-4 font-semibold">{t.footer.contactTitle}</h4>
               <ul className="space-y-2 text-gray-400">
                 <li>
                   <a
-                    href="https://getidphotoai.ae"
-                    className="hover:text-white transition-colors"
+                    href={homeHref}
+                    className="transition-colors hover:text-white"
                   >
                     GetIDPhotoAI.ae
                   </a>
                 </li>
                 <li>
                   <a
-                    href={`mailto:${constants.businessLocations[0]?.email}`}
-                    className="hover:text-white transition-colors"
+                    href={`mailto:${email}`}
+                    className="transition-colors hover:text-white"
                   >
-                    {constants.businessLocations[0]?.email}
+                    {email}
                   </a>
                 </li>
                 <li>
                   <a
-                    href={`https://wa.me/${(constants.businessLocations[0]?.whatsapp || "971559461415").replace(/\D/g, "")}`}
+                    href={`https://wa.me/${whatsapp.replace(/\D/g, "")}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="hover:text-white transition-colors"
+                    className="transition-colors hover:text-white"
                   >
-                    WhatsApp {constants.businessLocations[0]?.phone || "+971559461415"}
+                    {t.footer.whatsappWithPhone.replace("{phone}", phone)}
                   </a>
                 </li>
-                <li>{constants.businessLocations[0]?.hours}</li>
+                <li>{locale === "ar" ? t.footer.hours : (constants.businessLocations[0]?.hours || t.footer.hours)}</li>
               </ul>
             </div>
           </div>
 
-          <div className="border-t border-gray-800 mt-8 pt-8 flex flex-col md:flex-row justify-between items-center">
-            <div className="flex flex-col items-center md:items-start gap-2">
+          <div className="mt-8 flex flex-col items-center justify-between border-t border-gray-800 pt-8 md:flex-row">
+            <div className="flex flex-col items-center gap-2 md:items-start">
               <p className="text-gray-400">
-                &copy; {new Date().getFullYear()} {constants.studioName}. All
-                rights reserved.
+                &copy; {new Date().getFullYear()} {constants.studioName}.{" "}
+                {t.footer.rights}
               </p>
               <a
                 href="https://getidphoto.ae"
-                className="text-gray-400 hover:text-white transition-colors text-sm"
+                className="text-sm text-gray-400 transition-colors hover:text-white"
               >
-                Power by getidphoto.ae
+                {t.footer.poweredBy}
               </a>
             </div>
-            <div className="flex space-x-6 mt-4 md:mt-0">
+            <div className="mt-4 flex gap-6 md:mt-0">
               <a
                 href="/privacy-policy"
-                className="text-gray-400 hover:text-white transition-colors"
+                className="text-gray-400 transition-colors hover:text-white"
               >
-                Privacy Policy
+                {t.footer.privacy}
               </a>
               <a
                 href="/terms-of-service"
-                className="text-gray-400 hover:text-white transition-colors"
+                className="text-gray-400 transition-colors hover:text-white"
               >
-                Terms of Service
+                {t.footer.terms}
               </a>
               <a
                 href="/refund-policy"
-                className="text-gray-400 hover:text-white transition-colors"
+                className="text-gray-400 transition-colors hover:text-white"
               >
-                Refund Policy
+                {t.footer.refund}
               </a>
             </div>
           </div>

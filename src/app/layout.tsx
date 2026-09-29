@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
-import { Outfit, Source_Serif_4 } from "next/font/google";
+import { Outfit, Source_Serif_4, Noto_Sans_Arabic } from "next/font/google";
 import "./globals.css";
 import JsonLd from "@/components/JsonLd";
+import { LocaleProvider } from "@/i18n/LocaleProvider";
+import { getDictionary } from "@/i18n/get-dictionary";
 import {
   DEFAULT_DESCRIPTION,
   DEFAULT_TITLE,
@@ -10,7 +12,11 @@ import {
   SEO_KEYWORDS,
   SITE_NAME,
   SITE_URL,
+  buildHomeAlternates,
+  homeUrlForLocale,
 } from "@/lib/seo";
+import { getRequestLocale } from "@/i18n/get-request-locale";
+import { htmlLang, isRtl } from "@/i18n/config";
 
 const gitVersion = process.env.GIT_COMMIT_SHA;
 
@@ -24,6 +30,12 @@ const sourceSerif = Source_Serif_4({
   variable: "--font-heading",
   subsets: ["latin"],
   weight: ["600", "700"],
+});
+
+const notoArabic = Noto_Sans_Arabic({
+  variable: "--font-arabic",
+  subsets: ["arabic"],
+  weight: ["400", "500", "600", "700"],
 });
 
 export const metadata: Metadata = {
@@ -46,16 +58,13 @@ export const metadata: Metadata = {
     telephone: false,
   },
   alternates: {
-    canonical: "/",
-    languages: {
-      "en-AE": "/",
-      en: "/",
-    },
+    ...buildHomeAlternates("en"),
   },
   openGraph: {
     type: "website",
     locale: "en_AE",
-    url: SITE_URL,
+    alternateLocale: ["ar_AE"],
+    url: homeUrlForLocale("en"),
     siteName: SITE_NAME,
     title: DEFAULT_TITLE,
     description: DEFAULT_DESCRIPTION,
@@ -105,8 +114,6 @@ export const metadata: Metadata = {
     "geo.placename": GEO.placename,
     "geo.position": GEO.position,
     ICBM: GEO.icbm,
-    "content-language": "en",
-    language: "English",
     coverage: "United Arab Emirates, GCC",
     distribution: "global",
     rating: "general",
@@ -115,28 +122,38 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const locale = await getRequestLocale();
+  const rtl = isRtl(locale);
+  const lang = htmlLang(locale);
+  const dictionary = await getDictionary(locale);
+
   return (
-    <html lang="en-AE">
+    <html lang={lang} dir={rtl ? "rtl" : "ltr"} suppressHydrationWarning>
       <head>
         <meta name="version" content={gitVersion} />
-        <meta httpEquiv="content-language" content="en" />
+        <meta
+          httpEquiv="content-language"
+          content={locale === "ar" ? "ar-AE" : "en-AE"}
+        />
         <meta name="geo.region" content={GEO.region} />
         <meta name="geo.placename" content={GEO.placename} />
         <meta name="geo.position" content={GEO.position} />
         <meta name="ICBM" content={GEO.icbm} />
-        <link rel="alternate" hrefLang="en-AE" href={SITE_URL} />
-        <link rel="alternate" hrefLang="x-default" href={SITE_URL} />
       </head>
       <body
-        className={`${outfit.variable} ${sourceSerif.variable} antialiased font-sans`}
+        className={`${outfit.variable} ${sourceSerif.variable} ${notoArabic.variable} antialiased font-sans ${
+          rtl ? "font-arabic" : ""
+        }`}
       >
-        <JsonLd />
-        {children}
+        <LocaleProvider locale={locale} dictionary={dictionary}>
+          <JsonLd />
+          {children}
+        </LocaleProvider>
       </body>
     </html>
   );
