@@ -1,8 +1,16 @@
 import type { MetadataRoute } from "next";
 import { SITE_URL } from "@/lib/seo";
+import { DOCUMENT_PAGES, documentPath } from "@/lib/document-catalog";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const lastModified = new Date();
+
+  const documentEntries: MetadataRoute.Sitemap = DOCUMENT_PAGES.map((page) => ({
+    url: `${SITE_URL}${documentPath(page)}`,
+    lastModified,
+    changeFrequency: "weekly",
+    priority: page.tier === "primary" ? 0.85 : 0.7,
+  }));
 
   return [
     {
@@ -16,6 +24,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
       lastModified,
       changeFrequency: "daily",
       priority: 0.95,
+    },
+    {
+      url: `${SITE_URL}/spec`,
+      lastModified,
+      changeFrequency: "weekly",
+      priority: 0.9,
     },
     {
       url: `${SITE_URL}/make-photo`,
@@ -41,30 +55,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: "monthly",
       priority: 0.5,
     },
-    // Document / service category landings (query entry points, priority 0.8)
-    {
-      url: `${SITE_URL}/make-photo?specCode=uae-passport`,
-      lastModified,
-      changeFrequency: "weekly",
-      priority: 0.8,
-    },
-    {
-      url: `${SITE_URL}/make-photo?specCode=uae-id-card`,
-      lastModified,
-      changeFrequency: "weekly",
-      priority: 0.8,
-    },
-    {
-      url: `${SITE_URL}/make-photo?specCode=dubai-visa`,
-      lastModified,
-      changeFrequency: "weekly",
-      priority: 0.8,
-    },
-    {
-      url: `${SITE_URL}/make-photo?specCode=40x60-mm`,
-      lastModified,
-      changeFrequency: "weekly",
-      priority: 0.8,
-    },
+    ...documentEntries,
   ];
 }

@@ -26,6 +26,7 @@ import PhotoGuidelines from "../components/PhotoGuidelines";
 import BrandLogo from "../components/BrandLogo";
 import FaqSection from "../components/FaqSection";
 import LanguageSwitcher from "../components/LanguageSwitcher";
+import SiteFooter from "../components/SiteFooter";
 import { useRef, useState, type ReactNode } from "react";
 import NavItem from "../lib/nav-item";
 import type { ProductPackage } from "../models/ProductPackage";
@@ -79,7 +80,7 @@ function HomeView({ locale, dictionary }: HomeViewProps) {
   const pricingSectionRef = useRef<HTMLDivElement | null>(null);
   const testimonialsSectionRef = useRef<HTMLDivElement | null>(null);
   const faqSectionRef = useRef<HTMLDivElement | null>(null);
-  const contactSectionRef = useRef<HTMLDivElement | null>(null);
+  const contactSectionRef = useRef<HTMLElement | null>(null);
 
   const navItems = [
     {
@@ -596,120 +597,12 @@ function HomeView({ locale, dictionary }: HomeViewProps) {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer ref={contactSectionRef} className="bg-gray-900 py-12 text-white">
-        <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
-          <div className="grid gap-8 md:grid-cols-4">
-            <div className="md:col-span-2">
-              <div className="mb-4">
-                <BrandLogo height={64} variant="light" />
-              </div>
-              <p className="mb-4 leading-relaxed text-gray-400">{t.footer.blurb}</p>
-              <div className="flex gap-4">
-                <div className="flex">
-                  {[...Array(5)].map((_, i) => (
-                    <Star
-                      key={i}
-                      className="h-4 w-4 fill-current text-yellow-400"
-                    />
-                  ))}
-                </div>
-                <span className="text-sm text-gray-400">{t.footer.reviews}</span>
-              </div>
-            </div>
-
-            <div>
-              <h4 className="mb-4 font-semibold">{t.footer.servicesTitle}</h4>
-              <ul className="space-y-2 text-gray-400">
-                {photoRequirements.map((item) => (
-                  <li key={item.id}>
-                    <a
-                      href="#services"
-                      className="transition-colors hover:text-white"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        servicesSectionRef.current?.scrollIntoView({
-                          behavior: "smooth",
-                        });
-                      }}
-                    >
-                      {item.title}
-                    </a>
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            <div>
-              <h4 className="mb-4 font-semibold">{t.footer.contactTitle}</h4>
-              <ul className="space-y-2 text-gray-400">
-                <li>
-                  <a
-                    href={homeHref}
-                    className="transition-colors hover:text-white"
-                  >
-                    GetIDPhotoAI.ae
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href={`mailto:${email}`}
-                    className="transition-colors hover:text-white"
-                  >
-                    {email}
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href={`https://wa.me/${whatsapp.replace(/\D/g, "")}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="transition-colors hover:text-white"
-                  >
-                    {t.footer.whatsappWithPhone.replace("{phone}", phone)}
-                  </a>
-                </li>
-                <li>{locale === "ar" ? t.footer.hours : (constants.businessLocations[0]?.hours || t.footer.hours)}</li>
-              </ul>
-            </div>
-          </div>
-
-          <div className="mt-8 flex flex-col items-center justify-between border-t border-gray-800 pt-8 md:flex-row">
-            <div className="flex flex-col items-center gap-2 md:items-start">
-              <p className="text-gray-400">
-                &copy; {new Date().getFullYear()} {constants.studioName}.{" "}
-                {t.footer.rights}
-              </p>
-              <a
-                href="https://getidphoto.ae"
-                className="text-sm text-gray-400 transition-colors hover:text-white"
-              >
-                {t.footer.poweredBy}
-              </a>
-            </div>
-            <div className="mt-4 flex gap-6 md:mt-0">
-              <a
-                href="/privacy-policy"
-                className="text-gray-400 transition-colors hover:text-white"
-              >
-                {t.footer.privacy}
-              </a>
-              <a
-                href="/terms-of-service"
-                className="text-gray-400 transition-colors hover:text-white"
-              >
-                {t.footer.terms}
-              </a>
-              <a
-                href="/refund-policy"
-                className="text-gray-400 transition-colors hover:text-white"
-              >
-                {t.footer.refund}
-              </a>
-            </div>
-          </div>
-        </div>
-      </footer>
+      <SiteFooter
+        locale={locale}
+        dictionary={dictionary}
+        contactRef={contactSectionRef}
+        homeHref={homeHref}
+      />
     </div>
   );
 }
