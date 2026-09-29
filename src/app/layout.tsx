@@ -74,6 +74,9 @@ export const metadata: Metadata = {
     description: DEFAULT_DESCRIPTION,
     images: [OG_IMAGE_PATH],
   },
+  verification: {
+    google: "LLOX9Tc96M9IY0jfOLpRWQT9whz5s9mxCWjdHJfrLt8",
+  },
   robots: {
     index: true,
     follow: true,
