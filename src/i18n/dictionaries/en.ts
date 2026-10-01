@@ -114,6 +114,7 @@ export type Dictionary = {
     questionsPrefix: string;
     emailLabel: string;
     whatsappLabel: string;
+    facebookLabel: string;
   };
   footer: {
     blurb: string;
@@ -127,6 +128,8 @@ export type Dictionary = {
     refund: string;
     hours: string;
     whatsappWithPhone: string;
+    facebook: string;
+    followUs: string;
   };
   makePhoto: {
     title: string;
@@ -439,6 +442,7 @@ export const en: Dictionary = {
     questionsPrefix: "Questions?",
     emailLabel: "Email",
     whatsappLabel: "WhatsApp",
+    facebookLabel: "Facebook",
   },
   footer: {
     blurb:
@@ -453,6 +457,8 @@ export const en: Dictionary = {
     refund: "Refund Policy",
     hours: "Online 24/7 — Human review: 8:00 AM – 5:00 PM GST",
     whatsappWithPhone: "WhatsApp {phone}",
+    facebook: "Facebook",
+    followUs: "Follow us",
   },
   makePhoto: {
     title: "Make Your ID Photo",

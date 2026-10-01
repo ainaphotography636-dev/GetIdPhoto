@@ -27,6 +27,7 @@ import BrandLogo from "../components/BrandLogo";
 import FaqSection from "../components/FaqSection";
 import LanguageSwitcher from "../components/LanguageSwitcher";
 import SiteFooter from "../components/SiteFooter";
+import SocialLinks from "../components/SocialLinks";
 import { useRef, useState, type ReactNode } from "react";
 import NavItem from "../lib/nav-item";
 import type { ProductPackage } from "../models/ProductPackage";
@@ -593,6 +594,9 @@ function HomeView({ locale, dictionary }: HomeViewProps) {
                 {phone}
               </a>
             </p>
+            <div className="mt-5 flex justify-center">
+              <SocialLinks variant="compact" />
+            </div>
           </div>
         </div>
       </section>

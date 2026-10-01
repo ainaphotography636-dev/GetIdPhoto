@@ -297,6 +297,7 @@ export const ar: Dictionary = {
     questionsPrefix: "أسئلة؟",
     emailLabel: "البريد",
     whatsappLabel: "واتساب",
+    facebookLabel: "فيسبوك",
   },
   footer: {
     blurb:
@@ -311,6 +312,8 @@ export const ar: Dictionary = {
     refund: "سياسة الاسترداد",
     hours: "متاح إلكترونياً على مدار الساعة — المراجعة البشرية: 8:00 ص – 5:00 م بتوقيت الخليج",
     whatsappWithPhone: "واتساب {phone}",
+    facebook: "فيسبوك",
+    followUs: "تابعنا",
   },
   makePhoto: {
     title: "أنشئ صورة الهوية",

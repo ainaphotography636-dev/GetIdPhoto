@@ -3,6 +3,7 @@
 import Link from "next/link";
 import BrandLogo from "@/components/BrandLogo";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
+import SocialLinks from "@/components/SocialLinks";
 import { Star } from "lucide-react";
 import { constants } from "@/constants";
 import {
@@ -56,7 +57,7 @@ export default function SiteFooter({
               <BrandLogo height={64} variant="light" />
             </div>
             <p className="mb-4 leading-relaxed text-gray-400">{t.blurb}</p>
-            <div className="flex gap-4">
+            <div className="mb-5 flex gap-4">
               <div className="flex">
                 {[...Array(5)].map((_, i) => (
                   <Star
@@ -67,6 +68,7 @@ export default function SiteFooter({
               </div>
               <span className="text-sm text-gray-400">{t.reviews}</span>
             </div>
+            <SocialLinks label={t.followUs} variant="footer" />
           </div>
 
           <nav aria-labelledby="footer-document-guides-heading">

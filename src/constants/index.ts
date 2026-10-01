@@ -51,6 +51,28 @@ export const constants = {
     process.env.NEXT_PUBLIC_STUDIO_DESCRIPTION,
     "Get government-compliant biometric photos for your UAE documents in seconds. Skip the studio—our AI automatically adjusts your photo to exact UAE specifications with a clean white background.",
   ),
+  facebookUrl: envText(
+    process.env.NEXT_PUBLIC_FACEBOOK_URL,
+    "https://www.facebook.com/profile.php?id=61594567847804",
+  ),
+  social: {
+    facebook: envText(
+      process.env.NEXT_PUBLIC_FACEBOOK_URL,
+      "https://www.facebook.com/profile.php?id=61594567847804",
+    ),
+    instagram: envText(
+      process.env.NEXT_PUBLIC_INSTAGRAM_URL,
+      "https://www.instagram.com/getidphotoai/",
+    ),
+    tiktok: envText(
+      process.env.NEXT_PUBLIC_TIKTOK_URL,
+      "https://www.tiktok.com/@getidphotoai",
+    ),
+    threads: envText(
+      process.env.NEXT_PUBLIC_THREADS_URL,
+      "https://www.threads.net/@getidphotoai",
+    ),
+  },
   defaultSpecCodes: [
     "uae-passport",
     "uae-id-card",
