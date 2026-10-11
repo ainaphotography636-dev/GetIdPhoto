@@ -13,10 +13,13 @@ interface Props {
   locale: Locale;
   /** Used for Arabic (and UI chrome). English package body stays on `pkg`. */
   pricingCopy: Dictionary["pricing"];
+  /** English-only lines so a document page does not repeat the homepage package list. */
+  featureLines?: string[];
+  noticeText?: string;
 }
 
 export default function ProductPackageCard(props: Props): JSX.Element {
-  const { pkg, onBuyClick, isLoading, locale, pricingCopy } = props;
+  const { pkg, onBuyClick, isLoading, locale, pricingCopy, featureLines, noticeText } = props;
   const isFeatured = Boolean(pkg.isPopular);
   const useArabicCopy = locale === "ar";
   const localized =
@@ -27,9 +30,13 @@ export default function ProductPackageCard(props: Props): JSX.Element {
   const formattedPrice = formatPrice(pkg.priceCents, pkg.currency);
 
   const name = useArabicCopy ? localized.name : pkg.name;
-  const notice = useArabicCopy ? localized.notice : pkg.notice;
+  const notice = useArabicCopy ? localized.notice : (noticeText ?? pkg.notice);
   const descriptions = [
-    ...(useArabicCopy ? localized.features : pkg.description),
+    ...(useArabicCopy
+      ? localized.features
+      : featureLines && featureLines.length > 0
+        ? featureLines
+        : pkg.description),
     pkg.printedPhotoNumber === 0
       ? undefined
       : useArabicCopy

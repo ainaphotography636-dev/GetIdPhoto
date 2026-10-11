@@ -3695,9 +3695,9 @@ export const allPhotoSpecs: Record<SpecCode, PhotoSpec> = {
   "uae-passport": {
     specCode: "uae-passport",
     specCodeInEnglish: "UAE Passport",
-    headHeightText: "37.8 - 37.8",
+    headHeightText: "42 - 48",
     eyeToBottomText: "20 - 30",
-    bgColorText: "grey",
+    bgColorText: "white",
     dpi: 300,
     unit: "mm",
     widthPx: 472,

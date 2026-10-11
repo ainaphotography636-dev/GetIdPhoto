@@ -204,9 +204,9 @@ export const en: Dictionary = {
         detail: "Meets ICP Smart Services Emirates ID photo requirements",
       },
       "dubai-visa": {
-        title: "UAE VISA Photo",
-        description: "GDRFA dimensions & white background",
-        detail: "GDRFA-compliant sizing with required white background",
+        title: "Dubai Visa Photo",
+        description: "GDRFA size for Dubai filings",
+        detail: "GDRFA Dubai portrait for Amer and Dubai Now, separate from a MOHRE work permit",
       },
       "40x60-mm": {
         title: "40x60 mm Photo",
@@ -216,36 +216,36 @@ export const en: Dictionary = {
     },
   },
   guidelines: {
-    title: "Emirates ID & Visa Photo Guidelines: Dos and Don'ts",
+    title: "Home checklist before you pick a document",
     subtitle:
-      "Match the accepted examples before you upload. A compliant photo is more likely to pass ICP and GDRFA checks.",
+      "These samples show light, headwear, and expression only. The size and the authority live on the document page you open next.",
     diyTitle: "Can I Take My Own Emirati Passport Photo?",
     examples: [
       {
         id: "lighting",
-        title: "Proper lighting",
-        alt: "Evenly lit passport portrait with no shadows on the face",
+        title: "Light across the whole face",
+        alt: "Sample portrait with light across the whole face, before a document size is chosen",
         valid: true,
         src: "/guidelines/guideline-lighting.jpg",
       },
       {
         id: "hijab",
-        title: "Face visible with a religious headgear",
-        alt: "Passport portrait of a woman in a hijab with her full face visible",
+        title: "Headwear that leaves the face clear",
+        alt: "Sample of religious headwear that leaves the face clear, before a document is selected",
         valid: true,
         src: "/guidelines/guideline-hijab.jpg",
       },
       {
         id: "neutral",
-        title: "Neutral facial expression",
-        alt: "Passport portrait with a closed mouth and a neutral expression",
+        title: "Relaxed mouth",
+        alt: "Sample portrait with a relaxed closed mouth, not tied to one document",
         valid: true,
         src: "/guidelines/guideline-neutral.jpg",
       },
       {
         id: "shadow",
-        title: "Shadow across the face",
-        alt: "Portrait with a dark shadow covering one side of the face",
+        title: "Shade on one side",
+        alt: "Sample portrait with shade on one side of the face, shown before any document crop",
         valid: false,
         src: "/guidelines/guideline-shadow.jpg",
       },
@@ -258,8 +258,8 @@ export const en: Dictionary = {
       },
       {
         id: "smile",
-        title: "Smile",
-        alt: "Portrait of a person smiling, which is not accepted for a passport photo",
+        title: "An open smile",
+        alt: "Sample of an open smile, shown as a general mistake before you pick a document",
         valid: false,
         src: "/guidelines/guideline-smile.jpg",
       },
@@ -377,32 +377,28 @@ export const en: Dictionary = {
       "Clear answers for Dubai, Abu Dhabi, Sharjah, and GCC expats needing ICP-, GDRFA-, and visa-ready photos online.",
     items: [
       {
-        id: "uae-passport-requirements",
-        question:
-          "What are the official UAE passport photo requirements for Dubai and Abu Dhabi?",
+        id: "which-page",
+        question: "Which page should I open for my document?",
         answer:
-          "UAE passport photos must be biometric-compliant: correct head size and positioning, a plain white or light background, neutral expression, eyes open and clearly visible, and no shadows or glare. GetIDPhotoAI automatically crops and frames your selfie to UAE passport specifications used across Dubai, Abu Dhabi, Sharjah, and the other emirates, so you can submit online without visiting a mall studio.",
+          "Start here only to choose the document. Emirati passports, the ICP Emirates ID card, GDRFA Dubai visas, and MOHRE residency files each have their own page with that authority’s size and background. Do not use one page’s portrait for another filing.",
       },
       {
         id: "emirates-id-smartphone",
-        question:
-          "Can I make an Emirates ID photo with my smartphone for ICP Smart Services?",
+        question: "Can I start from a phone picture on this site?",
         answer:
-          "Yes. Take a clear front-facing selfie on your phone in good lighting, upload it on GetIDPhotoAI.ae, and our AI processes it to ICP Emirates ID photo size and framing. You receive a digital file ready for ICP Smart Services and typing centres across the UAE—no appointment or in-store visit required.",
+          "Yes. Upload a front-facing phone picture here, then continue on the document page that matches your filing. The crop, the field colour, and the authority check are explained on that page, not in this homepage answer.",
       },
       {
         id: "dubai-visa-gdrfa",
-        question:
-          "What photo size and background does Dubai visa (GDRFA) require?",
+        question: "Is a Dubai visa photo the same as a MOHRE work-permit photo?",
         answer:
-          "Dubai and UAE residency visa applications through GDRFA typically require a recent biometric photo with a white background, correct face proportions, and no filters or heavy editing. Select the UAE Visa photo option on our site to generate a GDRFA-ready image sized for online visa, residency, and related submissions in Dubai and across the UAE.",
+          "No. Dubai entry permits and residence files are reviewed by GDRFA. Work permits and residency files in the other emirates follow MOHRE and the local portal. Open the Dubai page or the UAE residency page, not both for the same form.",
       },
       {
         id: "background-removal",
-        question:
-          "Do you remove busy backgrounds and replace them with a white studio background?",
+        question: "What does the editor change in the picture I upload?",
         answer:
-          "Yes. Our AI isolates the subject, removes cluttered or coloured backgrounds, and replaces them with a clean white (or required light) background that meets UAE passport, Emirates ID, and GCC visa standards. This is ideal when you take a selfie at home in Dubai, Abu Dhabi, or Sharjah without a professional backdrop.",
+          "It lifts you off the room behind you and places the field colour that the document page names. It also frames the head for that document. It does not invent a second set of rules on the homepage.",
       },
       {
         id: "instant-delivery",

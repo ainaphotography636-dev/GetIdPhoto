@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import {
   documentPath,
   getDocumentPageBySlug,
@@ -9,6 +9,7 @@ import {
   getStaticDocumentParams,
   makePhotoHref,
 } from "@/lib/document-catalog";
+import RelatedDocuments from "@/components/RelatedDocuments";
 import RelatedLinks from "@/components/RelatedLinks";
 import BrandLogo from "@/components/BrandLogo";
 import SiteDocumentNav from "@/components/SiteDocumentNav";
@@ -37,7 +38,7 @@ export async function generateMetadata({
   const canonical = absoluteUrl(documentPath(page));
 
   return {
-    title: `${page.title} | ${SITE_NAME}`,
+    title: page.title,
     description: page.description,
     alternates: {
       canonical,
@@ -58,6 +59,10 @@ export default async function SpecDocumentPage({ params }: SpecPageProps) {
   const page = getDocumentPageBySlug(slug);
   if (!page) {
     notFound();
+  }
+
+  if (page.path) {
+    redirect(page.path);
   }
 
   const spec = getSpecSnapshot(page.specCode);
@@ -196,13 +201,15 @@ export default async function SpecDocumentPage({ params }: SpecPageProps) {
           <RelatedLinks
             links={related}
             currentTitle={page.title}
-            heading="Related UAE & GCC photo guides"
-            subtitle="Cross-link to sibling document pages so you can compare official photo requirements."
+            heading={`${page.shortTitle} alongside nearby guides`}
+            subtitle={`Compare ${page.shortTitle} with the nearest UAE and GCC sizes before you upload a different document.`}
           />
         </div>
       </main>
 
-      <footer className="mt-8 border-t border-slate-200 bg-slate-900 py-12 text-white">
+      <RelatedDocuments currentSlug={page.slug} className="mt-8" />
+
+      <footer className="border-t border-slate-800 bg-slate-900 py-12 text-white">
         <div className="mx-auto grid max-w-5xl gap-8 px-4 sm:px-6 md:grid-cols-2 lg:px-8">
           <div>
             <BrandLogo height={48} variant="light" />

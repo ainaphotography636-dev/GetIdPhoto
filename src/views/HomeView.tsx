@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import {
   Camera,
   Star,
@@ -30,6 +31,7 @@ import SiteFooter from "../components/SiteFooter";
 import SocialLinks from "../components/SocialLinks";
 import { useRef, useState, type ReactNode } from "react";
 import NavItem from "../lib/nav-item";
+import ServicesMenu from "@/components/ServicesMenu";
 import type { ProductPackage } from "../models/ProductPackage";
 import { formatPrice } from "../utils/formatPrice";
 import type { Locale } from "@/i18n/config";
@@ -149,17 +151,26 @@ function HomeView({ locale, dictionary }: HomeViewProps) {
           <div className="flex h-24 items-center justify-between gap-3">
             <BrandLogo height={68} />
             <nav className="hidden items-center gap-6 md:flex lg:gap-8">
-              {navItems.map((it, index) => (
-                <button
-                  key={index}
-                  className="font-medium text-gray-600 transition-colors hover:text-emerald-600"
-                  onClick={() => {
-                    it.handler();
-                  }}
-                >
-                  {it.label}
-                </button>
-              ))}
+              {navItems.map((it, index) =>
+                index === 0 ? (
+                  <ServicesMenu
+                    key={it.label}
+                    label={it.label}
+                    viewServicesLabel={t.services.title}
+                    onViewServices={it.handler}
+                  />
+                ) : (
+                  <button
+                    key={it.label}
+                    className="font-medium text-gray-600 transition-colors hover:text-emerald-600"
+                    onClick={() => {
+                      it.handler();
+                    }}
+                  >
+                    {it.label}
+                  </button>
+                ),
+              )}
             </nav>
 
             <div className="flex items-center gap-2 sm:gap-3">
@@ -368,17 +379,13 @@ function HomeView({ locale, dictionary }: HomeViewProps) {
           <div className="mb-8 grid gap-4 sm:grid-cols-2">
             {photoRequirements.map((item) => {
               const isSelected = selectedRequirement === item.id;
-              return (
-                <button
-                  key={item.id}
-                  type="button"
-                  onClick={() => setSelectedRequirement(item.id)}
-                  className={`flex h-full min-w-0 flex-col rounded-xl border-2 p-5 text-start transition-all duration-200 ${
-                    isSelected
-                      ? "border-emerald-600 bg-white shadow-md ring-2 ring-emerald-600/20"
-                      : "border-transparent bg-white/80 hover:border-emerald-200 hover:shadow-sm"
-                  }`}
-                >
+              const cardClass = `flex h-full min-w-0 flex-col rounded-xl border-2 p-5 text-start transition-all duration-200 ${
+                isSelected
+                  ? "border-emerald-600 bg-white shadow-md ring-2 ring-emerald-600/20"
+                  : "border-transparent bg-white/80 hover:border-emerald-200 hover:shadow-sm"
+              }`;
+              const cardBody = (
+                <>
                   <div className="mb-3 flex items-start justify-between gap-3">
                     <div
                       className={`shrink-0 rounded-lg p-2 ${
@@ -406,6 +413,30 @@ function HomeView({ locale, dictionary }: HomeViewProps) {
                   <p className="text-sm leading-relaxed text-gray-600">
                     {item.detail}
                   </p>
+                </>
+              );
+
+              if (item.id === "uae-id-card") {
+                return (
+                  <Link
+                    key={item.id}
+                    href="/uae-emirates-id-photo"
+                    className={cardClass}
+                    onClick={() => setSelectedRequirement(item.id)}
+                  >
+                    {cardBody}
+                  </Link>
+                );
+              }
+
+              return (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => setSelectedRequirement(item.id)}
+                  className={cardClass}
+                >
+                  {cardBody}
                 </button>
               );
             })}
@@ -424,7 +455,11 @@ function HomeView({ locale, dictionary }: HomeViewProps) {
             <button
               type="button"
               onClick={() =>
-                router.push(`/make-photo?specCode=${selectedRequirement}`)
+                router.push(
+                  selectedRequirement === "uae-id-card"
+                    ? "/uae-emirates-id-photo"
+                    : `/make-photo?specCode=${selectedRequirement}`,
+                )
               }
               className="inline-flex items-center justify-center gap-2 rounded-lg bg-emerald-600 px-6 py-3 font-semibold text-white transition-colors hover:bg-emerald-700"
             >

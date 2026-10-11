@@ -6,10 +6,10 @@ import {
   getAllDocumentLinks,
   makePhotoHref,
 } from "@/lib/document-catalog";
-import { SITE_NAME, SITE_URL, absoluteUrl } from "@/lib/seo";
+import { SITE_URL, absoluteUrl } from "@/lib/seo";
 
 export const metadata: Metadata = {
-  title: `UAE & GCC Passport and ID Photo Guides | ${SITE_NAME}`,
+  title: "UAE & GCC Passport and ID Photo Guides",
   description:
     "Browse official UAE passport, Emirates ID, Dubai visa, and GCC document photo guides with exact sizes and instant AI photo tools.",
   alternates: {

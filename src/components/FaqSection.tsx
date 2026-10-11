@@ -106,9 +106,24 @@ export default function FaqSection({
                   }`}
                 >
                   <div className="overflow-hidden">
-                    <p className="border-t border-slate-100 px-4 pb-4 pt-3 text-sm leading-relaxed text-slate-600 sm:px-5 sm:pb-5 sm:text-base">
-                      {item.answer}
-                    </p>
+                    <div className="border-t border-slate-100 px-4 pb-4 pt-3 sm:px-5 sm:pb-5">
+                      <p className="text-sm leading-relaxed text-slate-600 sm:text-base">
+                        {item.answer}
+                      </p>
+                      {item.source ? (
+                        <p className="mt-3 text-sm text-slate-600 sm:text-base">
+                          Official source:{" "}
+                          <a
+                            href={item.source.href}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="font-semibold text-primary underline decoration-primary/40 underline-offset-2 hover:text-primary-hover"
+                          >
+                            {item.source.label}
+                          </a>
+                        </p>
+                      ) : null}
+                    </div>
                   </div>
                 </div>
               </div>

@@ -36,7 +36,7 @@ export const EN_HOME_PATH = "/";
 export const AR_HOME_PATH = "/ar";
 
 export const GEO = {
-  region: "AE",
+  region: "AE-DU",
   placename: "Dubai, United Arab Emirates",
   /** lat;lng for geo.position */
   position: "25.2048;55.2708",

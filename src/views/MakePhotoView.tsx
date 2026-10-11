@@ -55,6 +55,12 @@ import HumanVerifiedContactFields, {
   isOptionalEmailValid,
   isOptionalWhatsappValid,
 } from "@/components/HumanVerifiedContactFields";
+import {
+  clearStagedCameraStream,
+  clearStagedPhotoUpload,
+  readStagedCameraStream,
+  readStagedPhotoUpload,
+} from "@/lib/pendingPhotoUpload";
 const GOOD_EXAMPLE_PHOTO = "/guidelines/good-example-passport-home.jpg";
 
 interface ApiResponse {
@@ -255,7 +261,7 @@ function MakePhotoView() {
     setIsUsingCamera(false);
   };
 
-  const processPhoto = async (file: File) => {
+  const processPhoto = async (file: File, spec: PhotoSpec = selectedSpec) => {
     setIsProcessing(true);
     setError("");
     setCurrentOrder(null);
@@ -304,7 +310,7 @@ function MakePhotoView() {
 
       const created = await createIdPhoto({
         imageBase64: imageDataURL,
-        specCode: selectedSpec.specCode,
+        specCode: spec.specCode,
       });
       if (!created.ok) {
         throw new Error(created.error);
@@ -314,7 +320,7 @@ function MakePhotoView() {
 
       const order = {
         orderId: created.orderId,
-        specCode: selectedSpec.specCode,
+        specCode: spec.specCode,
         status: "unpaid" as const,
         croppedNoBgWatermarkImageUrl: created.idPhotoImage,
         issues: [
@@ -481,6 +487,85 @@ function MakePhotoView() {
       }
       return [copyPhotoSpec(spec), ...prev.map(copyPhotoSpec)];
     });
+  }, [searchParams]);
+
+  useEffect(() => {
+    if (stream && videoRef.current && videoRef.current.srcObject !== stream) {
+      videoRef.current.srcObject = stream;
+    }
+  }, [stream, isUsingCamera]);
+
+  // Landing CTAs: /make-photo?specCode=uae-id-card&start=upload|camera
+  useEffect(() => {
+    const start = searchParams.get("start");
+    if (start !== "upload" && start !== "camera") {
+      return;
+    }
+
+    let cancelled = false;
+
+    const run = async () => {
+      await Promise.resolve();
+      if (cancelled) {
+        return;
+      }
+
+      if (start === "upload") {
+        const staged = readStagedPhotoUpload();
+        if (!staged) {
+          return;
+        }
+
+        const specCodeParam = searchParams.get("specCode");
+        const parsed = specCodeParam
+          ? specCodeFromString(specCodeParam)
+          : undefined;
+        const spec = parsed ? allPhotoSpecs[parsed] : selectedSpec;
+
+        setSelectedSpec(spec);
+        setSpecOptions((prev) => {
+          if (prev.some((opt) => opt.specCode === spec.specCode)) {
+            return prev;
+          }
+          return [copyPhotoSpec(spec), ...prev.map(copyPhotoSpec)];
+        });
+        setProcessedPhoto(null);
+        setQualityReport(null);
+        setShowOriginal(false);
+        setError("");
+        setSelectedFile(staged.file);
+        setPreviewUrl(URL.createObjectURL(staged.file));
+        clearStagedPhotoUpload(staged.generation);
+        await processPhoto(staged.file, spec);
+        return;
+      }
+
+      const existingStream = readStagedCameraStream();
+      if (existingStream) {
+        setSelectedFile(null);
+        setPreviewUrl("");
+        setProcessedPhoto(null);
+        setQualityReport(null);
+        setShowOriginal(false);
+        setStream(existingStream);
+        setIsUsingCamera(true);
+        if (videoRef.current) {
+          videoRef.current.srcObject = existingStream;
+        }
+        clearStagedCameraStream();
+        return;
+      }
+
+      await startCamera();
+    };
+
+    void run();
+
+    return () => {
+      cancelled = true;
+    };
+    // Claim a file or camera stream once per navigation into the editor.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams]);
 
   useEffect(() => {

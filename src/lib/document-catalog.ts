@@ -24,6 +24,11 @@ export type DocumentPageDef = {
   relatedSpecCodes: SpecCode[];
   /** Shown in global nav / footer discovery block */
   tier: "primary" | "secondary";
+  /**
+   * Custom landing that replaces the generated `/spec/[slug]` page.
+   * Links, the sitemap, and old spec URLs use this path instead.
+   */
+  path?: string;
 };
 
 export const DOCUMENT_PAGES: DocumentPageDef[] = [
@@ -33,10 +38,11 @@ export const DOCUMENT_PAGES: DocumentPageDef[] = [
     document: "passport",
     shortTitle: "UAE Passport Photo",
     specCode: "uae-passport",
-    title: "UAE Passport Photo Online",
-    anchorText: "UAE passport photo size & biometric requirements",
+    title: "UAE Passport Photo Maker",
+    anchorText: "Emirati passport photo size for citizen renewals",
     description:
-      "Create an ICP-ready UAE passport photo online with correct size, framing, and background for Dubai, Abu Dhabi, and Sharjah applications.",
+      "Make a 40 × 60 mm white-background UAE passport portrait with an ICAO face crop.",
+    path: "/uae-passport-photo",
     relatedSpecCodes: [
       "uae-id-card",
       "dubai-visa",
@@ -64,6 +70,7 @@ export const DOCUMENT_PAGES: DocumentPageDef[] = [
       "40x60-mm",
     ],
     tier: "primary",
+    path: "/uae-emirates-id-photo",
   },
   {
     slug: "dubai-visa-photo",
@@ -71,10 +78,11 @@ export const DOCUMENT_PAGES: DocumentPageDef[] = [
     document: "visa",
     shortTitle: "Dubai Visa Photo",
     specCode: "dubai-visa",
-    title: "Dubai Visa Photo (GDRFA)",
-    anchorText: "Dubai visa photo size for GDRFA applications",
+    title: "Dubai Visa Photo Maker",
+    anchorText: "Dubai visa photo for GDRFA and Amer",
     description:
-      "Get a GDRFA-compliant Dubai / UAE visa photo with the required white background and biometric proportions for residency and visit visas.",
+      "Make a 43 × 55 mm colour portrait for a GDRFA Dubai entry permit, residence renewal, or family sponsorship.",
+    path: "/dubai-visa-photo",
     relatedSpecCodes: [
       "uae-visa",
       "uae-evisa",
@@ -91,10 +99,11 @@ export const DOCUMENT_PAGES: DocumentPageDef[] = [
     document: "visa",
     shortTitle: "UAE Visa Photo",
     specCode: "uae-visa",
-    title: "UAE Visa Photo Online",
-    anchorText: "UAE visa photo requirements & online maker",
+    title: "UAE Visa Photo Maker",
+    anchorText: "UAE visa photo for MOHRE and ICP portals",
     description:
-      "Make a government-sized UAE visa photo online for residency, visit, and related submissions with AI cropping and white background.",
+      "Make a 35 × 45 mm or 40 × 60 mm portrait for a UAE residency visa filed outside a Dubai-only desk.",
+    path: "/uae-visa-photo",
     relatedSpecCodes: [
       "dubai-visa",
       "uae-evisa",
@@ -242,8 +251,10 @@ export type DocumentLink = {
   tier: DocumentPageDef["tier"];
 };
 
-export function documentPath(page: Pick<DocumentPageDef, "slug">): string {
-  return `/spec/${page.slug}`;
+export function documentPath(
+  page: Pick<DocumentPageDef, "slug"> & { path?: string },
+): string {
+  return page.path ?? `/spec/${page.slug}`;
 }
 
 export function makePhotoHref(specCode: SpecCode): string {
@@ -280,6 +291,22 @@ export function getAllDocumentLinks(): DocumentLink[] {
   return DOCUMENT_PAGES.map(toDocumentLink);
 }
 
+/** The four dedicated UAE document landings that should link to each other. */
+const UAE_CORE_SLUGS = [
+  "emirates-id-photo",
+  "dubai-visa-photo",
+  "uae-visa-photo",
+  "uae-passport-photo",
+] as const;
+
+export function getUaeCoreCrossLinks(currentSlug: string): DocumentLink[] {
+  return UAE_CORE_SLUGS.flatMap((slug) => {
+    if (slug === currentSlug) return [];
+    const page = getDocumentPageBySlug(slug);
+    return page ? [toDocumentLink(page)] : [];
+  });
+}
+
 export function getRelatedDocumentLinks(
   current: DocumentPageDef,
   limit = 6,
@@ -314,7 +341,9 @@ export function getSpecSnapshot(specCode: SpecCode) {
 }
 
 export function getStaticDocumentParams(): Array<{ slug: string }> {
-  return DOCUMENT_PAGES.map((page) => ({ slug: page.slug }));
+  return DOCUMENT_PAGES.filter((page) => !page.path).map((page) => ({
+    slug: page.slug,
+  }));
 }
 
 function toDocumentLink(page: DocumentPageDef): DocumentLink {

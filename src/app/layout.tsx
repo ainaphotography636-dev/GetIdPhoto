@@ -140,10 +140,6 @@ export default async function RootLayout({
           httpEquiv="content-language"
           content={locale === "ar" ? "ar-AE" : "en-AE"}
         />
-        <meta name="geo.region" content={GEO.region} />
-        <meta name="geo.placename" content={GEO.placename} />
-        <meta name="geo.position" content={GEO.position} />
-        <meta name="ICBM" content={GEO.icbm} />
       </head>
       <body
         className={`${outfit.variable} ${sourceSerif.variable} ${notoArabic.variable} antialiased font-sans ${

@@ -23,11 +23,58 @@ const nextConfig: NextConfig = {
     GIT_COMMIT_SHA: getGitVersion(),
   },
   async redirects() {
-    return LEGACY_SPEC_REDIRECTS.map(([country, document, slug]) => ({
-      source: `/spec/${country}/${document}`,
-      destination: `/spec/${slug}`,
-      permanent: true,
-    }));
+    return [
+      ...LEGACY_SPEC_REDIRECTS.filter(
+        ([country, document]) =>
+          document !== "emirates-id" &&
+          !(country === "uae" && (document === "passport" || document === "visa")) &&
+          !(country === "dubai" && document === "visa"),
+      ).map(([country, document, slug]) => ({
+        source: `/spec/${country}/${document}`,
+        destination: `/spec/${slug}`,
+        permanent: true,
+      })),
+      {
+        source: "/spec/uae/emirates-id",
+        destination: "/uae-emirates-id-photo",
+        permanent: true,
+      },
+      {
+        source: "/spec/emirates-id-photo",
+        destination: "/uae-emirates-id-photo",
+        permanent: true,
+      },
+      {
+        source: "/spec/uae/passport",
+        destination: "/uae-passport-photo",
+        permanent: true,
+      },
+      {
+        source: "/spec/uae-passport-photo",
+        destination: "/uae-passport-photo",
+        permanent: true,
+      },
+      {
+        source: "/spec/uae/visa",
+        destination: "/uae-visa-photo",
+        permanent: true,
+      },
+      {
+        source: "/spec/uae-visa-photo",
+        destination: "/uae-visa-photo",
+        permanent: true,
+      },
+      {
+        source: "/spec/dubai/visa",
+        destination: "/dubai-visa-photo",
+        permanent: true,
+      },
+      {
+        source: "/spec/dubai-visa-photo",
+        destination: "/dubai-visa-photo",
+        permanent: true,
+      },
+    ];
   },
 };
 
