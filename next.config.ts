@@ -19,6 +19,12 @@ const LEGACY_SPEC_REDIRECTS: Array<[string, string, string]> = [
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
+  serverExternalPackages: ["heic-convert", "heic-decode", "libheif-js"],
+  experimental: {
+    serverActions: {
+      bodySizeLimit: "20mb",
+    },
+  },
   env: {
     GIT_COMMIT_SHA: getGitVersion(),
   },

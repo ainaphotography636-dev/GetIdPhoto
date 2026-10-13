@@ -2,6 +2,10 @@ import type { EmiratesIdPageContent } from "@/data/emiratesIdData";
 
 export interface UaePassportPageContent extends EmiratesIdPageContent {
   breadcrumbLabel: string;
+  /** Middle crumb. Omit to keep “UAE Documents”. Null hides that crumb. */
+  breadcrumbParent?: { href: string; label: string } | null;
+  /** Line under the hero H1. Shown only when set. */
+  subheading?: string;
   beforeAlt: string;
   beforeSrc?: string;
   afterSrc?: string;

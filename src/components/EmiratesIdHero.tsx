@@ -17,11 +17,14 @@ import {
   stagePhotoUpload,
 } from "@/lib/pendingPhotoUpload";
 import { formatPrice } from "@/utils/formatPrice";
+import {
+  ACCEPTED_IMAGE_TYPES,
+  describePhotoUploadError,
+  ensureJpegFile,
+  isAcceptedPhotoFile,
+} from "@/utils/convertHeicToJpeg";
 
 type HeroContent = UaePassportPageContent;
-
-const ACCEPTED_IMAGE_TYPES =
-  "image/png,image/jpeg,image/jpg,image/webp,image/heic,image/heif,.heic,.heif,.webp";
 
 function DropPhotoIcon() {
   return (
@@ -98,6 +101,7 @@ export default function EmiratesIdHero({
     dosIntro: "",
     faqTitle: "",
     faqSubtitle: "",
+    subheading: undefined,
     pricingEyebrow: "",
     pricingTitle: "",
     pricingSubtitle: "",
@@ -108,6 +112,7 @@ export default function EmiratesIdHero({
   const [cameraError, setCameraError] = useState("");
   const [isOpeningCamera, setIsOpeningCamera] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
+  const [isConverting, setIsConverting] = useState(false);
   const dragDepth = useRef(0);
 
   const standardDigitalPkg = constants.productPackages.find(
@@ -122,26 +127,36 @@ export default function EmiratesIdHero({
     fileInputRef.current?.click();
   };
 
+  const sendPhoto = async (file: File) => {
+    setCameraError("");
+    setIsConverting(true);
+    try {
+      const jpeg = await ensureJpegFile(file);
+      stagePhotoUpload(jpeg);
+      router.push(`${editorHref}&start=upload`);
+    } catch (error) {
+      setCameraError(describePhotoUploadError(error));
+    } finally {
+      setIsConverting(false);
+    }
+  };
+
   const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     event.target.value = "";
     if (!file) {
       return;
     }
-
-    stagePhotoUpload(file);
-    router.push(`${editorHref}&start=upload`);
+    void sendPhoto(file);
   };
 
   const submitPhoto = (file: File | undefined) => {
-    if (!file || !file.type.startsWith("image/")) {
+    if (!file || !isAcceptedPhotoFile(file)) {
       setCameraError("Drop a photo file to continue.");
       return;
     }
 
-    setCameraError("");
-    stagePhotoUpload(file);
-    router.push(`${editorHref}&start=upload`);
+    void sendPhoto(file);
   };
 
   const handleDragEnter = (event: DragEvent<HTMLDivElement>) => {
@@ -206,12 +221,19 @@ export default function EmiratesIdHero({
                 Requirements
               </Link>
             </li>
-            <li aria-hidden>/</li>
-            <li>
-              <Link href="/requirements/uae" className="hover:text-white">
-                UAE Documents
-              </Link>
-            </li>
+            {page.breadcrumbParent !== null ? (
+              <>
+                <li aria-hidden>/</li>
+                <li>
+                  <Link
+                    href={page.breadcrumbParent?.href ?? "/requirements/uae"}
+                    className="hover:text-white"
+                  >
+                    {page.breadcrumbParent?.label ?? "UAE Documents"}
+                  </Link>
+                </li>
+              </>
+            ) : null}
             <li aria-hidden>/</li>
             <li className="font-medium text-white" aria-current="page">
               {page.breadcrumbLabel}
@@ -237,10 +259,17 @@ export default function EmiratesIdHero({
             </p>
             <h1
               id="emirates-id-hero-title"
-              className="font-display mb-6 text-4xl font-bold leading-[1.15] tracking-tight text-white md:text-5xl lg:text-[3.25rem]"
+              className={`font-display text-4xl font-bold leading-[1.15] tracking-tight text-white md:text-5xl lg:text-[3.25rem] ${
+                page.subheading ? "mb-2" : "mb-6"
+              }`}
             >
               {title ?? page.title}
             </h1>
+            {page.subheading ? (
+              <h2 className="font-display mb-6 text-xl font-semibold tracking-tight text-emerald-100 md:text-2xl">
+                {page.subheading}
+              </h2>
+            ) : null}
             <p className="mb-6 text-lg leading-relaxed text-emerald-50 md:text-xl">
               {page.subtitle}
             </p>
@@ -271,16 +300,17 @@ export default function EmiratesIdHero({
                 <button
                   type="button"
                   onClick={openFilePicker}
-                  className="inline-flex min-w-[9.5rem] items-center justify-center rounded-full bg-white px-6 py-2.5 text-sm font-semibold text-primary shadow-sm transition-colors hover:bg-emerald-50"
+                  disabled={isConverting}
+                  className="inline-flex min-w-[9.5rem] items-center justify-center rounded-full bg-white px-6 py-2.5 text-sm font-semibold text-primary shadow-sm transition-colors hover:bg-emerald-50 disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  Upload photo
+                  {isConverting ? "Converting photo..." : "Upload photo"}
                 </button>
                 <button
                   type="button"
                   onClick={() => {
                     void handleTakePhoto();
                   }}
-                  disabled={isOpeningCamera}
+                  disabled={isOpeningCamera || isConverting}
                   className="inline-flex min-w-[9.5rem] items-center justify-center rounded-full bg-white px-6 py-2.5 text-sm font-semibold text-primary shadow-sm transition-colors hover:bg-emerald-50 disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   {isOpeningCamera ? "Opening camera..." : "Take photo"}

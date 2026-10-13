@@ -14,11 +14,20 @@ export class ImageConversionError extends Error {
   }
 }
 
+export const ACCEPTED_IMAGE_TYPES =
+  "image/png,image/jpeg,image/jpg,image/webp,image/heic,image/heif,.heic,.heif,.webp";
+
 export const HEIC_UPLOAD_HELP_MESSAGE =
   "We couldn't process this photo. Please try selecting it again, or in your Photos app tap Share → Save as JPEG / Export as JPEG, then upload that file.";
 
 export const API_PHOTO_ERROR_MESSAGE =
   "We couldn't create your passport photo. Please try again.";
+
+export function isAcceptedPhotoFile(file: File): boolean {
+  const type = (file.type || "").toLowerCase();
+  if (type.startsWith("image/")) return true;
+  return /\.(hei[cf]|jpe?g|png|webp)$/i.test(file.name);
+}
 
 function isHeicOrHeif(file: File): boolean {
   const type = (file.type || "").toLowerCase();
@@ -53,6 +62,37 @@ function toJpegFile(blob: Blob, originalName: string): File {
     type: "image/jpeg",
     lastModified: Date.now(),
   });
+}
+
+async function fileLooksLikeHeic(file: Blob): Promise<boolean> {
+  try {
+    const header = new Uint8Array(await file.slice(0, 32).arrayBuffer());
+    if (header.length < 12) return false;
+    const box = String.fromCharCode(...header.slice(4, 8));
+    if (box !== "ftyp") return false;
+    const brands = String.fromCharCode(...header.slice(8));
+    return /heic|heix|hevc|hevx|heim|heis|mif1|msf1/i.test(brands);
+  } catch {
+    return false;
+  }
+}
+
+async function convertHeicOnServer(file: File): Promise<File | null> {
+  try {
+    const body = new FormData();
+    body.set("photo", file, file.name || "photo.heic");
+    const response = await fetch("/api/photo/convert-heic", {
+      method: "POST",
+      body,
+    });
+    if (!response.ok) return null;
+    const blob = await response.blob();
+    if (!blob.size) return null;
+    return toJpegFile(blob, file.name);
+  } catch (error) {
+    console.warn("[HEIC] server conversion failed", error);
+    return null;
+  }
 }
 
 async function decodeHeic(file: File): Promise<Blob> {
@@ -157,13 +197,14 @@ async function blobToJpegViaCanvas(blob: Blob): Promise<Blob> {
  * ImageConversionError when a JPEG cannot be produced.
  */
 export async function ensureJpegFile(file: File): Promise<File> {
-  if (isStandardJpeg(file)) {
+  const heic = isHeicOrHeif(file) || (await fileLooksLikeHeic(file));
+  if (!heic && isStandardJpeg(file)) {
     return file;
   }
 
   const candidates: Blob[] = [];
 
-  if (isHeicOrHeif(file)) {
+  if (heic) {
     try {
       candidates.push(await decodeHeic(file));
     } catch (err) {
@@ -196,6 +237,11 @@ export async function ensureJpegFile(file: File): Promise<File> {
         return toJpegFile(candidate, file.name);
       }
     }
+  }
+
+  if (heic) {
+    const fromServer = await convertHeicOnServer(file);
+    if (fromServer) return fromServer;
   }
 
   console.error("[image] Failed to convert upload to JPEG.", {
