@@ -87,7 +87,7 @@ export const allDocumentsList: PlannedDocument[] = [
   },
   {
     slug: "india-passport-photo",
-    title: "Indian Passport",
+    title: "Indian Passport Photo",
     category: "Passport Photos",
     specCode: "india-passport",
     popularGroup: "expat-passports",

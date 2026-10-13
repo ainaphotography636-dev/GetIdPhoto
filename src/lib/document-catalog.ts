@@ -181,6 +181,26 @@ export const DOCUMENT_PAGES: DocumentPageDef[] = [
     tier: "primary",
   },
   {
+    slug: "india-passport-photo",
+    country: "india",
+    document: "passport",
+    shortTitle: "Indian Passport Photo",
+    specCode: "india-passport",
+    title: "Indian Passport Photo Maker",
+    anchorText: "Indian passport photo online for AED 20",
+    description:
+      "Make a 51 × 51 mm Alhind Tours & Travels print and a 630 × 810 px Passport Seva JPG. The digital set is AED 20.",
+    path: "/india-passport-photo",
+    relatedSpecCodes: [
+      "uae-passport",
+      "uae-id-card",
+      "dubai-visa",
+      "saudiarabia-passport",
+      "40x60-mm",
+    ],
+    tier: "primary",
+  },
+  {
     slug: "saudi-arabia-visa-photo",
     country: "saudi-arabia",
     document: "visa",

@@ -80,6 +80,11 @@ const nextConfig: NextConfig = {
         destination: "/dubai-visa-photo",
         permanent: true,
       },
+      {
+        source: "/passport/indian",
+        destination: "/india-passport-photo",
+        permanent: true,
+      },
     ];
   },
 };
